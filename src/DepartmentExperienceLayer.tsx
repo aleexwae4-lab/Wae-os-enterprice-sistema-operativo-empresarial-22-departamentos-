@@ -1,0 +1,57 @@
+import { useEffect, useMemo, useState } from 'react'
+import { Bot, X } from 'lucide-react'
+import { departments, type Department } from './data'
+import DepartmentAgentWorkspace from './DepartmentAgentWorkspace'
+import './department-experience.css'
+
+function activeDepartmentFromDom():Department|null{
+  const active=document.querySelector('.department-nav button.active')
+  const label=active?.textContent?.trim()
+  if(!label)return null
+  return departments.find(d=>d.name===label)||null
+}
+
+function openWorkspaceDraft(title:string,body?:string){
+  localStorage.setItem('wae-workspace-draft',JSON.stringify({title,body:body??`# ${title}\n`}))
+  const buttons=[...document.querySelectorAll('button')]
+  const workspace=buttons.find(b=>b.textContent?.trim()==='Workspace')
+  if(workspace instanceof HTMLButtonElement)workspace.click()
+}
+
+function injectWorkspaceDraft(){
+  const raw=localStorage.getItem('wae-workspace-draft');if(!raw)return
+  const textarea=document.querySelector('.workspace textarea')
+  if(!(textarea instanceof HTMLTextAreaElement))return
+  try{
+    const draft=JSON.parse(raw) as {title?:string;body?:string}
+    textarea.value=draft.body||`# ${draft.title||'Documento'}\n`
+    textarea.dispatchEvent(new Event('input',{bubbles:true}))
+    localStorage.removeItem('wae-workspace-draft')
+  }catch{localStorage.removeItem('wae-workspace-draft')}
+}
+
+export default function DepartmentExperienceLayer(){
+  const [department,setDepartment]=useState<Department|null>(null)
+  const [open,setOpen]=useState(false)
+
+  useEffect(()=>{
+    const sync=()=>{
+      const next=activeDepartmentFromDom()
+      setDepartment(next)
+      if(!next)setOpen(false)
+      injectWorkspaceDraft()
+    }
+    sync()
+    const observer=new MutationObserver(sync)
+    observer.observe(document.body,{subtree:true,childList:true,attributes:true,attributeFilter:['class']})
+    return()=>observer.disconnect()
+  },[])
+
+  const docs=useMemo(()=>department?[`Reporte ejecutivo · ${department.name}`,`Política operativa · ${department.name}`,`Procedimiento · ${department.name}`,`Checklist · ${department.name}`,`Plan de acción · ${department.name}`]:[],[department])
+
+  if(!department)return null
+  return <>
+    <button className={`department-agent-launcher tone-${department.tone}`} onClick={()=>setOpen(true)} title={`Abrir ${department.agent}`}><Bot size={21}/><span>{department.agent}</span></button>
+    {open&&<div className="department-agent-overlay"><div className="department-agent-dialog"><button className="department-agent-close" onClick={()=>setOpen(false)}><X size={20}/></button><DepartmentAgentWorkspace department={department} documents={docs} onOpenWorkspace={(title,body)=>{openWorkspaceDraft(title,body);setOpen(false)}}/></div></div>}
+  </>
+}
