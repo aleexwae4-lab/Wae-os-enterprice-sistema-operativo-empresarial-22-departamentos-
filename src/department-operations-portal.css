@@ -1,0 +1,1 @@
+.content:has(.department-ops)>:not(.department-ops){display:none!important}
