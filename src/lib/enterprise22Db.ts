@@ -4,6 +4,8 @@ export const ENTERPRISE22_TABLES = Object.freeze({
   members: 'wae_enterprise22_members',
   companies: 'wae_enterprise22_companies',
   departmentState: 'wae_enterprise22_department_state',
+  conversations: 'wae_enterprise22_conversations',
+  messages: 'wae_enterprise22_messages',
 } as const)
 
 export type DatabaseConnectionState =
@@ -64,8 +66,8 @@ export async function checkEnterprise22Database(): Promise<DatabaseConnectionSta
 }
 
 /**
- * Guardrail for future authenticated data access. All application persistence
- * must resolve through this explicit allow-list; shared table names are not accepted.
+ * Guardrail for authenticated persistence. All Enterprise22 persistence must
+ * resolve through this explicit allow-list; shared WAE tables are rejected.
  */
 export function assertEnterprise22Table(table: string) {
   const allowed = Object.values(ENTERPRISE22_TABLES) as string[]
