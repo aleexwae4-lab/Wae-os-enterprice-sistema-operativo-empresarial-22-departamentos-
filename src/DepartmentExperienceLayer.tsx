@@ -8,11 +8,27 @@ import { departmentBlueprints } from './departmentCatalog'
 import './department-experience.css'
 import './department-operations-portal.css'
 
+const shortcutMap:Record<string,string>={
+  'Analítica':'analitica',
+  'Documentos IA':'documentos',
+  'Capacitación':'capacitacion',
+}
+
 function activeDepartmentFromDom():Department|null{
-  const active=document.querySelector('.department-nav button.active')
-  const label=active?.textContent?.trim()
-  if(!label)return null
-  return departments.find(d=>d.name===label)||null
+  const activeDepartment=document.querySelector('.department-nav button.active')
+  const departmentLabel=activeDepartment?.textContent?.trim()
+  if(departmentLabel){
+    const match=departments.find(d=>d.name===departmentLabel)
+    if(match)return match
+  }
+
+  const activeShortcut=[...document.querySelectorAll('.nav-group button.active')]
+    .map(b=>b.textContent?.trim()??'')
+    .find(label=>Boolean(shortcutMap[label]))
+  if(activeShortcut){
+    return departments.find(d=>d.id===shortcutMap[activeShortcut])||null
+  }
+  return null
 }
 
 function openWorkspaceDraft(title:string,body?:string){
