@@ -17,11 +17,12 @@ export type EnterprisePersistenceStatus={
 const zeroCounts=()=>({events:0,commands:0,workflows:0,approvals:0,outbox:0,audit:0})
 
 export async function inspectEnterprisePersistence():Promise<EnterprisePersistenceStatus>{
-  if(!enterpriseSupabaseConfigured||!enterpriseSupabase){
+  const client=enterpriseSupabase
+  if(!enterpriseSupabaseConfigured||!client){
     return {mode:'misconfigured',configured:false,reachable:false,schemaVersion:null,authenticated:false,tenantId:null,tenantName:null,companyId:null,reason:'Faltan variables públicas de Supabase.',counts:zeroCounts()}
   }
 
-  const probe=await enterpriseSupabase
+  const probe=await client
     .from('wae_enterprise22_connection_probe')
     .select('schema_version,service_name')
     .eq('singleton',true)
@@ -32,12 +33,12 @@ export async function inspectEnterprisePersistence():Promise<EnterprisePersisten
   }
 
   const schemaVersion=typeof probe.data?.schema_version==='number'?probe.data.schema_version:null
-  const {data:{session}}=await enterpriseSupabase.auth.getSession()
+  const {data:{session}}=await client.auth.getSession()
   if(!session){
     return {mode:'reachable',configured:true,reachable:true,schemaVersion,authenticated:false,tenantId:null,tenantName:null,companyId:null,reason:'Supabase y schema aislado verificados. Se requiere sesión autenticada para escritura durable.',counts:zeroCounts()}
   }
 
-  const tenantResult=await enterpriseSupabase
+  const tenantResult=await client
     .from('wae_enterprise22_tenants')
     .select('id,name,slug')
     .is('archived_at',null)
@@ -53,7 +54,7 @@ export async function inspectEnterprisePersistence():Promise<EnterprisePersisten
   }
 
   const tenantId=String(tenantResult.data.id)
-  const companyResult=await enterpriseSupabase
+  const companyResult=await client
     .from('wae_enterprise22_companies')
     .select('id')
     .eq('tenant_id',tenantId)
@@ -63,7 +64,7 @@ export async function inspectEnterprisePersistence():Promise<EnterprisePersisten
     .maybeSingle()
 
   const countTable=async(table:string)=>{
-    const result=await enterpriseSupabase.from(table).select('id',{count:'exact',head:true}).eq('tenant_id',tenantId)
+    const result=await client.from(table).select('id',{count:'exact',head:true}).eq('tenant_id',tenantId)
     return result.error?0:(result.count??0)
   }
   const [events,commands,workflows,approvals,outbox,audit]=await Promise.all([
@@ -84,8 +85,9 @@ export async function inspectEnterprisePersistence():Promise<EnterprisePersisten
 }
 
 function requireDurable(status:EnterprisePersistenceStatus){
-  if(!enterpriseSupabase||status.mode!=='durable'||!status.tenantId)throw new Error('Durable Enterprise22 session is not ready')
-  return enterpriseSupabase
+  const client=enterpriseSupabase
+  if(!client||status.mode!=='durable'||!status.tenantId)throw new Error('Durable Enterprise22 session is not ready')
+  return client
 }
 
 export async function publishDurableDemoEvent(status:EnterprisePersistenceStatus){
