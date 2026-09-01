@@ -10,8 +10,23 @@ import { usePremiumVoice } from './usePremiumVoice'
 
 const aurora=departments.find(d=>d.id==='ceo')??departments[0]
 type RuntimeState='ready'|'cloud'|'private'|'local'|'generating'
-type ChatMessage={id:string;role:'ai'|'user';text:string;pending?:boolean;source?:'cloud'|'private'|'local'}
 type AnalysisDepth='quick'|'detailed'|'deep'
+type OperationMeta={operation?:string;entity?:string;executionStatus?:string;missingFields?:string[];workflow?:string[];collaborators?:string[]}
+type ChatMessage={id:string;role:'ai'|'user';text:string;pending?:boolean;source?:'cloud'|'private'|'local';depth?:AnalysisDepth;meta?:OperationMeta}
+
+const executiveHeadings=/^(diagn[oó]stico|diagn[oó]stico ejecutivo|evidencia|datos confirmados|datos no disponibles|supuestos|impacto empresarial|impacto en la empresa|an[aá]lisis interdepartamental|riesgos|escenarios|recomendaci[oó]n|pr[oó]ximos pasos|plan de acci[oó]n|decisi[oó]n requerida)\s*:?[\s]*$/i
+function cleanExecutiveLine(line:string){return line.replace(/^#{1,4}\s*/,'').replace(/^\*\*(.+)\*\*$/,'$1').trim()}
+function ExecutiveCopy({text}:{text:string}){
+  const lines=text.split(/\n+/).map(line=>line.trim()).filter(Boolean)
+  if(lines.length<2)return <p className="executive-paragraph">{text}</p>
+  return <div className="executive-structured">{lines.map((raw,index)=>{
+    const line=cleanExecutiveLine(raw),bullet=/^(?:[-*•]|\d+[.)])\s+/.test(raw)
+    const heading=/^#{1,4}\s+/.test(raw)||executiveHeadings.test(line)
+    if(heading)return <h4 key={index}>{line.replace(/:$/,'')}</h4>
+    if(bullet)return <div className="executive-bullet" key={index}><i/>{cleanExecutiveLine(raw.replace(/^(?:[-*•]|\d+[.)])\s+/,''))}</div>
+    return <p className="executive-paragraph" key={index}>{line}</p>
+  })}</div>
+}
 
 function clickNavigation(label:string){const button=[...document.querySelectorAll('button')].find(item=>item.textContent?.trim()===label);if(button instanceof HTMLButtonElement)button.click()}
 
@@ -74,9 +89,14 @@ export default function AuroraExpertChatLayer(){
     const privateAccess=privateState.status==='private'&&privateState.context?.company.id&&privateState.accessToken
       ?{accessToken:privateState.accessToken,companyId:privateState.context.company.id,conversationId}
       :undefined
-    setInput('');setBusy(true);setRuntime('generating');setCollaborators([]);setMessages(v=>[...v,{id:userId,role:'user',text},{id:aiId,role:'ai',text:'',pending:true}])
+    setInput('');setBusy(true);setRuntime('generating');setCollaborators([]);setMessages(v=>[...v,{id:userId,role:'user',text,depth},{id:aiId,role:'ai',text:'',pending:true,depth}])
     try{
-      const result=await streamEnterprise22Expert({department:aurora,input:text,history,depth,privateAccess,onDelta:chunk=>setMessages(v=>v.map(m=>m.id===aiId?{...m,text:m.text+chunk,pending:true,source:privateAccess?'private':'cloud'}:m)),onMeta:meta=>{if(Array.isArray(meta.collaborators))setCollaborators(meta.collaborators.map(item=>typeof item==='object'&&item&&'agent' in item?String(item.agent):'').filter(Boolean))}})
+      const result=await streamEnterprise22Expert({department:aurora,input:text,history,depth,privateAccess,onDelta:chunk=>setMessages(v=>v.map(m=>m.id===aiId?{...m,text:m.text+chunk,pending:true,source:privateAccess?'private':'cloud'}:m)),onMeta:meta=>{
+        const agents=Array.isArray(meta.collaborators)?meta.collaborators.map(item=>typeof item==='object'&&item&&'agent' in item?String(item.agent):'').filter(Boolean):[]
+        if(agents.length)setCollaborators(agents)
+        const operationMeta:OperationMeta={operation:typeof meta.operation==='string'?meta.operation:undefined,entity:typeof meta.entity==='string'?meta.entity:undefined,executionStatus:typeof meta.execution_status==='string'?meta.execution_status:undefined,missingFields:Array.isArray(meta.missing_fields)?meta.missing_fields.map(String):undefined,workflow:Array.isArray(meta.workflow)?meta.workflow.map(String):undefined,collaborators:agents}
+        setMessages(v=>v.map(m=>m.id===aiId?{...m,meta:operationMeta}:m))
+      }})
       if(result.conversationId)setConversationId(result.conversationId)
       setMessages(v=>v.map(m=>m.id===aiId?{...m,pending:false,source:result.runtime}:m));setRuntime(result.runtime==='private'?'private':'cloud');voice.speak(result.content)
     }catch{
@@ -99,7 +119,7 @@ export default function AuroraExpertChatLayer(){
     {busy?<div className="aurora-analysis-state"><span><i/><i/><i/></span><div><b>WAE está analizando en modo {depth==='quick'?'rápido':depth==='deep'?'profundo':'detallado'}…</b><small>Clasificando intención · convocando directores · evaluando riesgos · consolidando decisión</small></div></div>:null}
 
     <div className="aurora-expert-thread">
-      {messages.map(m=>m.role==='user'?<div className="aurora-expert-message user" key={m.id}>{m.text}</div>:<article className={`aurora-executive-response ${m.pending?'pending':''}`} key={m.id}><header><span><BrainCircuit size={16}/></span><div><small>DIAGNÓSTICO EJECUTIVO</small><b>{depth==='deep'?'Lectura empresarial 360°':depth==='quick'?'Respuesta ejecutiva':'Análisis y recomendación'}</b></div>{m.pending?<em>Analizando</em>:<em className="complete"><CheckCircle2 size={12}/>Listo</em>}</header>{!m.pending?<div className="executive-evidence"><span><Gauge size={12}/>Confiabilidad contextual</span><b>{privateState.status==='private'?'Alta · datos autorizados':'Condicionada · contexto conversacional'}</b></div>:null}<div className="executive-copy">{m.text||<span className="aurora-thinking"><i/><i/><i/></span>}</div>{!m.pending&&m.text?<><div className="executive-directors"><small>DIRECTORES CONVOCADOS</small><div>{(collaborators.length?collaborators:['AURORA']).map(agent=><span key={agent}>{agent}</span>)}</div></div><footer><button onClick={openLeadDepartment}><Activity size={14}/>Abrir área responsable</button><button onClick={()=>setInput(`Convierte esta recomendación en un plan de acción con responsables, KPI y fechas:\n${m.text.slice(0,1200)}`)}><ListChecks size={14}/>Crear plan</button><button onClick={()=>setInput(`Realiza una revisión de riesgos legales, financieros, operativos y tecnológicos sobre esta decisión:\n${m.text.slice(0,1200)}`)}><ShieldAlert size={14}/>Revisar riesgos</button><button onClick={()=>openWorkspace(m.text)}><FileText size={14}/>Workspace</button></footer></>:null}</article>)}
+      {messages.map(m=>m.role==='user'?<div className="aurora-expert-message user" key={m.id}>{m.text}</div>:<article className={`aurora-executive-response ${m.pending?'pending':''}`} key={m.id}><header><span><BrainCircuit size={16}/></span><div><small>DIAGNÓSTICO EJECUTIVO</small><b>{m.depth==='deep'?'Lectura empresarial 360°':m.depth==='quick'?'Respuesta ejecutiva':'Análisis y recomendación'}</b></div>{m.pending?<em>Analizando</em>:<em className="complete"><CheckCircle2 size={12}/>Listo</em>}</header>{m.meta?.workflow?.length?<div className="executive-workflow">{m.meta.workflow.map((step,index)=><div className={m.pending&&index===m.meta!.workflow!.length-1?'active':'complete'} key={step}><span>{index+1}</span><small>{step}</small></div>)}</div>:null}{m.meta?.executionStatus==='requires_information'&&m.meta.missingFields?.length?<div className="executive-operation-gate"><div><ShieldAlert size={16}/><span><b>Información obligatoria pendiente</b><small>No se ejecutará ninguna operación con datos incompletos.</small></span></div><div>{m.meta.missingFields.map(field=><button key={field} onClick={()=>setInput(value=>`${value}${value?'\n':''}${field}: `)}>{field}</button>)}</div></div>:null}{!m.pending?<div className="executive-evidence"><span><Gauge size={12}/>Confiabilidad contextual</span><b>{privateState.status==='private'?'Alta · datos autorizados':'Condicionada · contexto conversacional'}</b></div>:null}<div className="executive-copy">{m.text?(m.pending?m.text:<ExecutiveCopy text={m.text}/>):<span className="aurora-thinking"><i/><i/><i/></span>}</div>{!m.pending&&m.text?<><div className="executive-directors"><small>DIRECTORES CONVOCADOS</small><div>{(m.meta?.collaborators?.length?m.meta.collaborators:['AURORA']).map(agent=><span key={agent}>{agent}</span>)}</div></div><footer><button onClick={openLeadDepartment}><Activity size={14}/>Abrir área responsable</button><button onClick={()=>setInput(`Convierte esta recomendación en un plan de acción con responsables, KPI y fechas:\n${m.text.slice(0,1200)}`)}><ListChecks size={14}/>Crear plan</button><button onClick={()=>setInput(`Realiza una revisión de riesgos legales, financieros, operativos y tecnológicos sobre esta decisión:\n${m.text.slice(0,1200)}`)}><ShieldAlert size={14}/>Revisar riesgos</button><button onClick={()=>openWorkspace(m.text)}><FileText size={14}/>Workspace</button></footer></>:null}</article>)}
     </div>
 
     <div className="aurora-input-dock">
