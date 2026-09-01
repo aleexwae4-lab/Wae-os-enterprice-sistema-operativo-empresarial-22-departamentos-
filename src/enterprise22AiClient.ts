@@ -2,12 +2,12 @@ import type { Department } from './data'
 
 export type ExpertHistoryMessage={role:'user'|'assistant';content:string}
 export type PrivateExpertAccess={accessToken:string;companyId:string;conversationId?:string|null}
-type StreamArgs={department:Department;input:string;history:ExpertHistoryMessage[];privateAccess?:PrivateExpertAccess;onDelta:(chunk:string)=>void;onMeta?:(meta:Record<string,unknown>)=>void}
+type StreamArgs={department:Department;input:string;history:ExpertHistoryMessage[];depth?:'quick'|'detailed'|'deep';privateAccess?:PrivateExpertAccess;onDelta:(chunk:string)=>void;onMeta?:(meta:Record<string,unknown>)=>void}
 
 function eventBlocks(buffer:string){const normalized=buffer.replace(/\r\n/g,'\n');const blocks=normalized.split('\n\n');return{blocks:blocks.slice(0,-1),rest:blocks.at(-1)??''}}
 function parseBlock(block:string){let event='message',data='';for(const line of block.split('\n')){if(line.startsWith('event:'))event=line.slice(6).trim();if(line.startsWith('data:'))data+=line.slice(5).trim()}let payload:Record<string,unknown>={};if(data){try{const parsed=JSON.parse(data);if(parsed&&typeof parsed==='object')payload=parsed as Record<string,unknown>}catch{payload={text:data}}}return{event,payload}}
 
-export async function streamEnterprise22Expert({department,input,history,privateAccess,onDelta,onMeta}:StreamArgs){
+export async function streamEnterprise22Expert({department,input,history,depth,privateAccess,onDelta,onMeta}:StreamArgs){
   const controller=new AbortController()
   const timeout=window.setTimeout(()=>controller.abort(),65000)
   let conversationId=privateAccess?.conversationId??null
@@ -18,7 +18,7 @@ export async function streamEnterprise22Expert({department,input,history,private
     const response=await fetch('/api/expert-chat/',{
       method:'POST',
       headers,
-      body:JSON.stringify({department_id:department.id,input,history:history.slice(-12),company_id:privateAccess?.companyId??null,conversation_id:conversationId}),
+      body:JSON.stringify({department_id:department.id,input,depth:depth??'detailed',history:history.slice(-12),company_id:privateAccess?.companyId??null,conversation_id:conversationId}),
       signal:controller.signal,
     })
     const contentType=response.headers.get('content-type')||''
