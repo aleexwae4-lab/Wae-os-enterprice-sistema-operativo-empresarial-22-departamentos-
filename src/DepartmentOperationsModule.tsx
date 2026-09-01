@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react'
 import {
   Activity, Bot, ChevronRight, FileText, Gauge, Layers3, Plus, Search, Sparkles,
-  WandSparkles, Workflow, X, Zap,
+  WandSparkles, X, Zap,
 } from 'lucide-react'
 import type { Department } from './data'
 import DepartmentAgentWorkspace from './DepartmentAgentWorkspace'
@@ -25,6 +25,7 @@ export default function DepartmentOperationsModule({department}:{department:Depa
   const [draft,setDraft]=useState({title:'',subtitle:'',amount:'',status:'Pendiente',meta:''})
 
   if(!blueprint)return null
+  const Icon=department.icon
   const filtered=useMemo(()=>{const q=query.trim().toLowerCase();return !q?records:records.filter(r=>[r.title,r.subtitle,r.status,r.meta??''].some(v=>v.toLowerCase().includes(q)))},[records,query])
   const activeCount=records.filter(r=>!['Completo','Resuelto','Pagada','Contabilizada','Operativo','Saludable'].includes(r.status)).length
 
@@ -38,7 +39,7 @@ export default function DepartmentOperationsModule({department}:{department:Depa
 
   return <section className={`department-ops department-ops-${department.tone}`}>
     <header className="department-ops-heading">
-      <span className="department-ops-icon"><department.icon size={25}/></span>
+      <span className="department-ops-icon"><Icon size={25}/></span>
       <div><small>{department.agent} · {department.role}</small><h1>{blueprint.title}</h1><p>{blueprint.subtitle}</p></div>
       <span className="department-online"><i/>AI activa</span>
     </header>
