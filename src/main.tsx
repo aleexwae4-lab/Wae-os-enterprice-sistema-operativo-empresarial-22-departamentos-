@@ -1,5 +1,6 @@
 import React from 'react'
 import ReactDOM from 'react-dom/client'
+import { checkEnterprise22Database, type DatabaseConnectionState } from './lib/enterprise22Db'
 import './styles.css'
 import './evolution.css'
 
@@ -58,6 +59,41 @@ class ErrorBoundary extends React.Component<ErrorBoundaryProps, ErrorBoundarySta
   }
 }
 
+function renderDatabaseStatus(state: DatabaseConnectionState) {
+  const current = document.getElementById('wae-db-status')
+  const badge = current ?? document.createElement('div')
+  badge.id = 'wae-db-status'
+
+  const connected = state.status === 'connected'
+  const label = connected
+    ? `DB aislada · conectada · v${state.schemaVersion}`
+    : state.status === 'unconfigured'
+      ? 'DB aislada · sin configurar'
+      : 'DB aislada · error de conexión'
+
+  const detail = connected ? state.serviceName : state.detail
+  badge.textContent = label
+  badge.title = detail
+  badge.setAttribute('data-db-status', state.status)
+  Object.assign(badge.style, {
+    position: 'fixed',
+    right: '88px',
+    bottom: '25px',
+    zIndex: '38',
+    padding: '8px 11px',
+    borderRadius: '999px',
+    border: connected ? '1px solid rgba(52,211,153,.28)' : '1px solid rgba(248,113,113,.26)',
+    background: connected ? 'rgba(6,78,59,.9)' : 'rgba(69,10,10,.9)',
+    color: connected ? '#a7f3d0' : '#fecaca',
+    font: '700 10px Inter,system-ui,sans-serif',
+    letterSpacing: '.02em',
+    boxShadow: '0 12px 35px rgba(0,0,0,.28)',
+    backdropFilter: 'blur(12px)',
+  })
+
+  if (!current) document.body.appendChild(badge)
+}
+
 window.addEventListener('error', event => {
   if (event.error) showStartupError(event.error)
 })
@@ -79,5 +115,7 @@ import('./App')
         </ErrorBoundary>
       </React.StrictMode>,
     )
+
+    void checkEnterprise22Database().then(renderDatabaseStatus)
   })
   .catch(showStartupError)
