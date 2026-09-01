@@ -14,3 +14,4 @@
 .content:has(.academy-premium)>:not(.academy-premium){display:none!important}
 .content:has(.security-premium)>:not(.security-premium){display:none!important}
 .content:has(.compliance-premium)>:not(.compliance-premium){display:none!important}
+.content:has(.operations-premium)>:not(.operations-premium){display:none!important}
