@@ -2,6 +2,7 @@ import { createPortal } from 'react-dom'
 import { WalletCards, type LucideProps } from 'lucide-react'
 import PayrollModule from './PayrollModule'
 import type { Department } from './data'
+import './payroll-portal.css'
 
 const payrollDepartment:Department={
   id:'nominas',name:'Nóminas AI',agent:'PAYROLL',role:'Gerente de Nóminas AI',
