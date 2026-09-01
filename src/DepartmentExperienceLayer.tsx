@@ -4,30 +4,23 @@ import { Bot, X } from 'lucide-react'
 import { departments, type Department } from './data'
 import DepartmentAgentWorkspace from './DepartmentAgentWorkspace'
 import DepartmentOperationsModule from './DepartmentOperationsModule'
+import FinanceModule from './FinanceModule'
 import { departmentBlueprints } from './departmentCatalog'
 import './department-experience.css'
 import './department-operations-portal.css'
 
-const shortcutMap:Record<string,string>={
-  'Analítica':'analitica',
-  'Documentos IA':'documentos',
-  'Capacitación':'capacitacion',
-}
-
 function activeDepartmentFromDom():Department|null{
-  const activeDepartment=document.querySelector('.department-nav button.active')
-  const departmentLabel=activeDepartment?.textContent?.trim()
-  if(departmentLabel){
-    const match=departments.find(d=>d.name===departmentLabel)
-    if(match)return match
+  const active=document.querySelector('.department-nav button.active')
+  const label=active?.textContent?.trim()
+  if(label){
+    const byDepartment=departments.find(d=>d.name===label)
+    if(byDepartment)return byDepartment
   }
-
-  const activeShortcut=[...document.querySelectorAll('.nav-group button.active')]
-    .map(b=>b.textContent?.trim()??'')
-    .find(label=>Boolean(shortcutMap[label]))
-  if(activeShortcut){
-    return departments.find(d=>d.id===shortcutMap[activeShortcut])||null
-  }
+  const navActive=[...document.querySelectorAll('.nav-group button.active')].find(b=>['Analítica','Documentos IA','Capacitación'].includes(b.textContent?.trim()??''))
+  const strategic=navActive?.textContent?.trim()
+  if(strategic==='Analítica')return departments.find(d=>d.id==='analitica')??null
+  if(strategic==='Documentos IA')return departments.find(d=>d.id==='documentos')??null
+  if(strategic==='Capacitación')return departments.find(d=>d.id==='capacitacion')??null
   return null
 }
 
@@ -73,6 +66,10 @@ export default function DepartmentExperienceLayer(){
   const docs=useMemo(()=>department?[`Reporte ejecutivo · ${department.name}`,`Política operativa · ${department.name}`,`Procedimiento · ${department.name}`,`Checklist · ${department.name}`,`Plan de acción · ${department.name}`]:[],[department])
 
   if(!department)return null
+
+  if(department.id==='finanzas'&&target){
+    return createPortal(<FinanceModule department={department}/>,target)
+  }
 
   const hasOperationalWorkspace=Boolean(departmentBlueprints[department.id])
   if(hasOperationalWorkspace&&target){
