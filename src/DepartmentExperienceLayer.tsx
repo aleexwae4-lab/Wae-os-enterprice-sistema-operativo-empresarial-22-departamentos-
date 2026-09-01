@@ -14,6 +14,7 @@ import CustomerExperienceModule from './CustomerExperienceModule'
 import MarketingModule from './MarketingModule'
 import SalesModule from './SalesModule'
 import ProjectModule from './ProjectModule'
+import AnalyticsModule from './AnalyticsModule'
 import { departmentBlueprints } from './departmentCatalog'
 import './department-experience.css'
 import './department-operations-portal.css'
@@ -76,50 +77,20 @@ export default function DepartmentExperienceLayer(){
 
   if(!department)return null
 
-  if(department.id==='finanzas'&&target){
-    return createPortal(<FinanceModule department={department}/>,target)
-  }
-
-  if(department.id==='legal'&&target){
-    return createPortal(<LegalModule department={department}/>,target)
-  }
-
-  if(department.id==='contabilidad'&&target){
-    return createPortal(<AccountingModule department={department}/>,target)
-  }
-
-  if(department.id==='proveedores'&&target){
-    return createPortal(<SupplierModule department={department}/>,target)
-  }
-
-  if(department.id==='compras'&&target){
-    return createPortal(<ProcurementModule department={department}/>,target)
-  }
-
-  if(department.id==='activos'&&target){
-    return createPortal(<AssetModule department={department}/>,target)
-  }
-
-  if(department.id==='atencion'&&target){
-    return createPortal(<CustomerExperienceModule department={department}/>,target)
-  }
-
-  if(department.id==='marketing'&&target){
-    return createPortal(<MarketingModule department={department}/>,target)
-  }
-
-  if(department.id==='ventas'&&target){
-    return createPortal(<SalesModule department={department}/>,target)
-  }
-
-  if(department.id==='proyectos'&&target){
-    return createPortal(<ProjectModule department={department}/>,target)
-  }
+  if(department.id==='finanzas'&&target){return createPortal(<FinanceModule department={department}/>,target)}
+  if(department.id==='legal'&&target){return createPortal(<LegalModule department={department}/>,target)}
+  if(department.id==='contabilidad'&&target){return createPortal(<AccountingModule department={department}/>,target)}
+  if(department.id==='proveedores'&&target){return createPortal(<SupplierModule department={department}/>,target)}
+  if(department.id==='compras'&&target){return createPortal(<ProcurementModule department={department}/>,target)}
+  if(department.id==='activos'&&target){return createPortal(<AssetModule department={department}/>,target)}
+  if(department.id==='atencion'&&target){return createPortal(<CustomerExperienceModule department={department}/>,target)}
+  if(department.id==='marketing'&&target){return createPortal(<MarketingModule department={department}/>,target)}
+  if(department.id==='ventas'&&target){return createPortal(<SalesModule department={department}/>,target)}
+  if(department.id==='proyectos'&&target){return createPortal(<ProjectModule department={department}/>,target)}
+  if(department.id==='analitica'&&target){return createPortal(<AnalyticsModule department={department}/>,target)}
 
   const hasOperationalWorkspace=Boolean(departmentBlueprints[department.id])
-  if(hasOperationalWorkspace&&target){
-    return createPortal(<DepartmentOperationsModule department={department}/>,target)
-  }
+  if(hasOperationalWorkspace&&target){return createPortal(<DepartmentOperationsModule department={department}/>,target)}
 
   return <>
     <button className={`department-agent-launcher tone-${department.tone}`} onClick={()=>setOpen(true)} title={`Abrir ${department.agent}`}><Bot size={21}/><span>{department.agent}</span></button>
