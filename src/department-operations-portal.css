@@ -6,3 +6,4 @@
 .content:has(.procurement-premium)>:not(.procurement-premium){display:none!important}
 .content:has(.asset-premium)>:not(.asset-premium){display:none!important}
 .content:has(.care-premium)>:not(.care-premium){display:none!important}
+.content:has(.marketing-premium)>:not(.marketing-premium){display:none!important}
