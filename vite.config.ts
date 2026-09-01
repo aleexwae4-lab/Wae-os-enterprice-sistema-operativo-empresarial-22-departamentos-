@@ -1,10 +1,11 @@
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
+import { enterprise22ExpertProxy } from './server/enterprise22ExpertProxy.mjs'
 
 const renderHost = 'wae-os-enterprice22.onrender.com'
 
 export default defineConfig({
-  plugins: [react()],
+  plugins: [react(), enterprise22ExpertProxy()],
   server: {
     allowedHosts: [renderHost],
   },

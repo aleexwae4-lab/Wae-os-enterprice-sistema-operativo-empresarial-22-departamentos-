@@ -5,10 +5,13 @@ import {
 } from 'lucide-react'
 import type { Department } from './data'
 import { buildDepartmentExpertResponse, expertModePrompts } from './departmentExpertEngine'
+import { streamEnterprise22Expert, type ExpertHistoryMessage } from './enterprise22AiClient'
 import './department-agent.css'
 import './department-agent-expert.css'
 
 type AgentTab = 'chat'|'documents'|'knowledge'|'capabilities'|'dashboard'|'automations'|'integrations'
+type RuntimeState='ready'|'cloud'|'local'|'generating'
+type ChatMessage={id:string;role:'ai'|'user';text:string;pending?:boolean;source?:'cloud'|'local'}
 
 type Props = {
   department: Department
@@ -37,7 +40,9 @@ const defaultKnowledge = (name:string) => [
 export default function DepartmentAgentWorkspace({department,documents,knowledge,suggestions,onOpenWorkspace}:Props){
   const [tab,setTab] = useState<AgentTab>('chat')
   const [input,setInput] = useState('')
-  const [messages,setMessages] = useState<{role:'ai'|'user';text:string}[]>([])
+  const [messages,setMessages] = useState<ChatMessage[]>([])
+  const [runtime,setRuntime]=useState<RuntimeState>('ready')
+  const [busy,setBusy]=useState(false)
   const docs = documents ?? defaultDocuments(department.name)
   const kb = knowledge ?? defaultKnowledge(department.name)
   const expertModes = useMemo(()=>expertModePrompts(department),[department])
@@ -51,18 +56,29 @@ export default function DepartmentAgentWorkspace({department,documents,knowledge
     'CEO Chat','Supabase aislado','Workspace','Documentos IA','Auditoría','Notificaciones',
   ],[])
 
-  const sendText=(raw:string)=>{
-    const text=raw.trim(); if(!text)return
-    const response=buildDepartmentExpertResponse(department,text)
-    setMessages(v=>[...v,{role:'user',text},{role:'ai',text:response}])
-    setInput('')
+  const sendText=async(raw:string)=>{
+    const text=raw.trim(); if(!text||busy)return
+    const history:ExpertHistoryMessage[]=messages.filter(m=>!m.pending&&m.text.trim()).map(m=>({role:m.role==='ai'?'assistant':'user',content:m.text}))
+    const userId=`u-${Date.now()}-${Math.random().toString(36).slice(2,7)}`
+    const aiId=`a-${Date.now()}-${Math.random().toString(36).slice(2,7)}`
+    setInput('');setBusy(true);setRuntime('generating')
+    setMessages(v=>[...v,{id:userId,role:'user',text},{id:aiId,role:'ai',text:'',pending:true}])
+    try{
+      await streamEnterprise22Expert({department,input:text,history,onDelta:chunk=>setMessages(v=>v.map(m=>m.id===aiId?{...m,text:m.text+chunk,pending:true,source:'cloud'}:m))})
+      setMessages(v=>v.map(m=>m.id===aiId?{...m,pending:false,source:'cloud'}:m));setRuntime('cloud')
+    }catch{
+      const fallback=buildDepartmentExpertResponse(department,text)
+      setMessages(v=>v.map(m=>m.id===aiId?{...m,text:fallback,pending:false,source:'local'}:m));setRuntime('local')
+    }finally{setBusy(false)}
   }
-  const send=()=>sendText(input)
+  const send=()=>{void sendText(input)}
+  const runtimeLabel=runtime==='generating'?'Generando…':runtime==='cloud'?'WAE AI conectado':runtime==='local'?'Continuidad local':'WAE AI'
 
   return <section className={`dept-agent dept-agent-${department.tone}`}>
     <header className="dept-agent-head">
       <div className="dept-agent-orb"><Bot size={22}/></div>
       <div><div className="dept-agent-title"><b>{department.agent}</b><i/></div><p>{department.role} · {department.name}</p></div>
+      <span className={`dept-agent-runtime ${runtime}`}>{runtimeLabel}</span>
     </header>
 
     <div className="dept-agent-expertbar">
@@ -85,9 +101,10 @@ export default function DepartmentAgentWorkspace({department,documents,knowledge
     {tab==='chat'&&<div className="dept-agent-chat">
       <div className="dept-agent-thread">
         {messages.length===0?<div className="dept-agent-welcome"><Sparkles size={24}/><p>Habla con <b>{department.agent}</b> como con un especialista de {department.name}.</p><small className="dept-agent-welcome-copy">Pregunta conceptos, pide una estrategia, un plan, una capacitación o trae un problema real para diagnosticar.</small>{quick.map(q=><button key={q} onClick={()=>setInput(q)}><Zap size={14}/>{q}</button>)}</div>:
-          messages.map((m,i)=><div key={i} className={`dept-agent-message ${m.role}`}>{m.text}</div>)}
+          messages.map(m=><div key={m.id} className={`dept-agent-message ${m.role} ${m.pending?'pending':''}`}>{m.text||<span className="dept-agent-thinking"><i/><i/><i/></span>}</div>)}
       </div>
-      <div className="dept-agent-composer"><button aria-label="Adjuntar"><Paperclip size={18}/></button><textarea value={input} onChange={e=>setInput(e.target.value)} placeholder={`Pregunta a ${department.agent} sobre ${department.name}...`} onKeyDown={e=>{if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();send()}}}/><button aria-label="Voz"><Mic size={18}/></button><button className="agent-send" onClick={send} aria-label="Enviar"><Send size={17}/></button></div>
+      <div className="dept-agent-composer"><button aria-label="Adjuntar"><Paperclip size={18}/></button><textarea value={input} onChange={e=>setInput(e.target.value)} placeholder={`Pregunta a ${department.agent} sobre ${department.name}...`} onKeyDown={e=>{if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();send()}}}/><button aria-label="Voz"><Mic size={18}/></button><button className="agent-send" onClick={send} aria-label="Enviar" disabled={busy}><Send size={17}/></button></div>
+      <div className="dept-agent-privacy-note">Runtime efímero · no envíes contraseñas, API keys ni datos personales sensibles.</div>
     </div>}
 
     {tab==='documents'&&<div className="dept-agent-list-view"><div className="dept-agent-section-title"><FileText size={18}/><div><b>Biblioteca documental de {department.name}</b><span>{docs.length} plantillas listas para generar y editar</span></div></div>{docs.map(doc=><div className="dept-doc-row" key={doc}><FileText size={17}/><span>{doc}</span><button onClick={()=>onOpenWorkspace(doc,`# ${doc}\n\nDocumento generado desde ${department.agent}.\n\n## Objetivo\n\n## Alcance\n\n## Datos y evidencia\n\n## Desarrollo\n\n## Aprobaciones\n`)}>Editar en Workspace</button></div>)}</div>}
