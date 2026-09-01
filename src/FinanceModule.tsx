@@ -1,9 +1,8 @@
 import { useMemo, useState } from 'react'
 import {
-  AlertTriangle, ArrowDownRight, ArrowUpRight, BadgeDollarSign, Banknote, Bot,
-  Building2, CalendarClock, CheckCircle2, CircleDollarSign, FileText, Gauge,
-  Landmark, LineChart, PiggyBank, ReceiptText, ShieldCheck, Sparkles, Target,
-  TrendingUp, WalletCards, Zap,
+  AlertTriangle, ArrowDownRight, ArrowUpRight, Bot, Building2, CalendarClock,
+  CheckCircle2, CircleDollarSign, FileText, Gauge, Landmark, LineChart, PiggyBank,
+  ReceiptText, ShieldCheck, Sparkles, Target, TrendingUp, WalletCards, Zap,
 } from 'lucide-react'
 import type { Department } from './data'
 import DepartmentAgentWorkspace from './DepartmentAgentWorkspace'
@@ -106,7 +105,7 @@ export default function FinanceModule({department}:{department:Department}){
         <div className="finance-panel-title"><div><small>CEO / CFO VIEW</small><h2>Salud financiera</h2></div><span className="finance-score"><Gauge size={17}/>86/100</span></div>
         <div className="finance-health-grid">
           <div><span>Liquidez</span><b>Fuerte</b><i className="good"/></div>
-          <div><span>Rentabilidad</span><b>29.3%</b><i className="good"/></div>
+          <div><span>Rentabilidad</span><b>{margin.toFixed(1)}%</b><i className="good"/></div>
           <div><span>Cobranza</span><b>Presionada</b><i className="warn"/></div>
           <div><span>Exposición 30d</span><b>{money(payable+overdue)}</b><i className="risk"/></div>
         </div>
@@ -137,7 +136,7 @@ export default function FinanceModule({department}:{department:Department}){
 
     {tab==='receivables'&&<section className="finance-panel finance-wide">
       <div className="finance-panel-title"><div><small>AGING</small><h2>Cuentas por cobrar</h2></div><span>{receivables.filter(x=>x.status!=='Pagada').length} abiertas</span></div>
-      <div className="aging-strip"><div><span>Corriente</span><b>{money(receivables.filter(x=>x.status==='Pendiente').reduce((s,x)=>s+x.amount,0))}</b></div><div><span>1–30 días</span><b>$0</b></div><div><span>31–60 días</span><b>$52,506</b></div><div><span>61–90 días</span><b>$58,?00</b></div><div className="risk"><span>90+ días</span><b>{money(Math.max(0,overdue-52506))}</b></div></div>
+      <div className="aging-strip"><div><span>Corriente</span><b>{money(receivables.filter(x=>x.status==='Pendiente').reduce((s,x)=>s+x.amount,0))}</b></div><div><span>1–30 días</span><b>$0</b></div><div><span>31–60 días</span><b>$0</b></div><div><span>61–90 días</span><b>{money(52506)}</b></div><div className="risk"><span>90+ días</span><b>{money(Math.max(0,overdue-52506))}</b></div></div>
       <div className="finance-table-wrap"><table><thead><tr><th>Factura</th><th>Cliente</th><th>Vence</th><th>Días</th><th>Monto</th><th>Estado</th><th/></tr></thead><tbody>{receivables.map(r=><tr key={r.id}><td>{r.id}</td><td>{r.client}</td><td>{r.due}</td><td>{r.days||'—'}</td><td>{money(r.amount)}</td><td><span className={`fin-status ${r.status.toLowerCase()}`}>{r.status}</span></td><td>{r.status!=='Pagada'&&<button onClick={()=>payReceivable(r.id)}>Aplicar cobro</button>}</td></tr>)}</tbody></table></div>
     </section>}
 
@@ -148,7 +147,7 @@ export default function FinanceModule({department}:{department:Department}){
 
     {tab==='treasury'&&<div className="finance-layout">
       <section className="finance-panel finance-wide"><div className="finance-panel-title"><div><small>TESORERÍA</small><h2>Posición bancaria consolidada</h2></div><ShieldCheck size={18}/></div><div className="bank-grid">{[
-        ['Cuenta Operativa MXN','BBVA · ••4821',318420,'Disponible'],['Reserva Estratégica','Santander · ••1904',220000,'Restringida'],['Cobranza','Mercado Pago · ••7042',94500,'Disponible'],['USD Treasury','Wise Business · ••8830',511...0,'Disponible'],
+        ['Cuenta Operativa MXN','BBVA · ••4821',318420,'Disponible'],['Reserva Estratégica','Santander · ••1904',220000,'Restringida'],['Cobranza','Mercado Pago · ••7042',94500,'Disponible'],['USD Treasury','Wise Business · ••8830',51200,'Disponible'],
       ].map(([name,bank,value,state])=><article key={String(name)}><Building2 size={18}/><div><b>{name}</b><span>{bank}</span></div><strong>{money(Number(value))}</strong><em>{state}</em></article>)}</div></section>
       <section className="finance-panel"><h2>Reglas de tesorería</h2>{['Reserva mínima de 60 días','Doble autorización > $50,000','Segregación de funciones','Conciliación diaria'].map(x=><div className="rule-row" key={x}><CheckCircle2 size={15}/><span>{x}</span></div>)}</section>
       <section className="finance-panel"><h2>Alertas</h2><div className="alert-row"><AlertTriangle size={17}/><div><b>Cobranza vencida alta</b><span>{money(overdue)} requiere plan de recuperación.</span></div></div><div className="alert-row"><CalendarClock size={17}/><div><b>2 pagos por aprobar</b><span>Revisión antes del siguiente corte.</span></div></div></section>
