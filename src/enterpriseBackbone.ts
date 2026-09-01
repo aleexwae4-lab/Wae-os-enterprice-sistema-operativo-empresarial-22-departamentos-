@@ -72,7 +72,7 @@ function audit(correlationId:string,actor:string,action:string,result:string,evi
 }
 
 export function getBackboneSnapshot():BackboneState{return structuredClone(state)}
-export function subscribeBackbone(fn:()=>void){listeners.add(fn);return()=>listeners.delete(fn)}
+export function subscribeBackbone(fn:()=>void){listeners.add(fn);return()=>{listeners.delete(fn)}}
 
 export function publishEvent(input:Omit<BackboneEvent,'id'|'tenantId'|'createdAt'|'status'>){
   const event:BackboneEvent={...input,id:uid('EVT'),tenantId:TENANT,createdAt:now(),status:'Observed'}
