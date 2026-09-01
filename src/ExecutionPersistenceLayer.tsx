@@ -78,11 +78,11 @@ export default function ExecutionPersistenceLayer(){
     const sync=()=>{
       const root=document.querySelector('.backbone-premium')
       if(!(root instanceof HTMLElement)){setTarget(null);return}
-      let mount=root.querySelector('.execution-persistence-mount')
-      if(!(mount instanceof HTMLElement)){
+      let mount:HTMLElement|null=root.querySelector<HTMLElement>('.execution-persistence-mount')
+      if(!mount){
         mount=document.createElement('div')
         mount.className='execution-persistence-mount'
-        const tabs=root.querySelector('.backbone-tabs')
+        const tabs=root.querySelector<HTMLElement>('.backbone-tabs')
         if(tabs)root.insertBefore(mount,tabs)
         else root.appendChild(mount)
       }
