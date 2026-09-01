@@ -3,6 +3,7 @@ import ReactDOM from 'react-dom/client'
 import { checkEnterprise22Database, type DatabaseConnectionState } from './lib/enterprise22Db'
 import './styles.css'
 import './evolution.css'
+import './clip-reference.css'
 
 const rootElement = document.getElementById('root')
 
