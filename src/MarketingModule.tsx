@@ -21,7 +21,6 @@ type Campaign={
 type ContentItem={id:string;title:string;format:string;stage:string;channel:string;score:number;status:'Idea'|'Producción'|'Publicado';owner:string}
 type Experiment={id:string;name:string;metric:string;control:number;variant:number;uplift:number;confidence:number;status:ExperimentStatus;owner:string}
 type AttributionRow={source:string;spend:number;pipeline:number;revenue:number;won:number;confidence:Confidence;model:string}
-
 type Action={title:string;reason:string;tone:'good'|'warn'|'risk'}
 
 const money=(v:number)=>new Intl.NumberFormat('es-MX',{style:'currency',currency:'MXN',maximumFractionDigits:0}).format(v)
@@ -95,7 +94,7 @@ export default function MarketingModule({department}:{department:Department}){
   const pipeline=revenue*1.55
   const health=Math.max(0,Math.min(100,Math.round(78+Math.min(12,roas*2)-Math.max(0,pacing-90)/4)))
 
-  const attribution=useMemo<AttributionRow[]>(()=>campaigns.map(c=>({
+  const attribution=useMemo<AttributionRow[]>(()=>campaigns.map<AttributionRow>(c=>({
     source:c.channel,spend:c.spend,pipeline:c.revenue*1.55,revenue:c.revenue,won:c.won,
     confidence:c.channel==='Organic'||c.channel==='Partners'?'Media':'Alta',
     model:c.channel==='Organic'?'Assisted demo':c.channel==='Partners'?'Partner sourced demo':'UTM + CRM demo',
