@@ -2,10 +2,11 @@ import {
   Activity, BadgeDollarSign, BarChart3, BookOpenCheck, BriefcaseBusiness,
   Calculator, ChartNoAxesCombined, ClipboardCheck, Cpu, FileText,
   Fingerprint, Gavel, Headphones, Landmark, Megaphone, Network, PackageCheck,
-  ReceiptText, ShieldCheck, ShoppingCart, UsersRound,
+  ReceiptText, ShieldCheck, ShoppingCart,
 } from 'lucide-react'
 import InventoryDepartmentIcon from './InventoryDepartmentIcon'
 import PayrollDepartmentIcon from './PayrollDepartmentIcon'
+import HumanResourcesDepartmentIcon from './HumanResourcesDepartmentIcon'
 
 export type Department = {
   id: string
@@ -22,7 +23,7 @@ export type Department = {
 export const departments: Department[] = [
   { id:'ceo', name:'Dirección General', agent:'AURORA', role:'Chief Executive AI', description:'Orquesta la empresa, coordina directores y convierte datos en decisiones.', icon:BriefcaseBusiness, tone:'violet', capabilities:['Resumen ejecutivo','Decisiones asistidas','Delegación multiagente'], automations:['Brief diario','Alertas críticas','Seguimiento de objetivos'] },
   { id:'finanzas', name:'Finanzas', agent:'STERLING', role:'Director de Finanzas AI', description:'Liquidez, flujo, tesorería, escenarios y control financiero.', icon:BadgeDollarSign, tone:'emerald', capabilities:['Flujo de caja','Proyecciones','Tesorería'], automations:['Alertas de liquidez','Forecast automático','Conciliación'] },
-  { id:'rrhh', name:'Recursos Humanos', agent:'TALENT', role:'Director de RR. HH. AI', description:'Talento, clima, expedientes, contratación y desempeño.', icon:UsersRound, tone:'pink', capabilities:['Gestión de talento','Expedientes','Desempeño'], automations:['Vacaciones','Onboarding','Alertas laborales'] },
+  { id:'rrhh', name:'Recursos Humanos', agent:'TALENT', role:'Director de Recursos Humanos AI', description:'Expedientes, incidencias, contratos, desempeño, clima y organigrama.', icon:HumanResourcesDepartmentIcon as unknown as typeof Activity, tone:'pink', capabilities:['Diseñar planes de carrera','Evaluar desempeño','Analizar clima laboral','Estructurar compensación','Gestionar conflictos','Crear programas de capacitación','Detectar riesgo de rotación','Optimizar organigramas','Auditar cumplimiento laboral','Generar reportes de RRHH'], automations:['Onboarding y offboarding','Vacaciones y permisos','Evaluación de desempeño','Alertas de rotación','Actualización de expedientes','Sincronización con Nóminas'] },
   { id:'legal', name:'Legal', agent:'JUSTITIA', role:'Director Jurídico AI', description:'Contratos, riesgos, cumplimiento y soporte corporativo.', icon:Gavel, tone:'amber', capabilities:['Contratos','Riesgo jurídico','Obligaciones'], automations:['Vencimientos','Revisión documental','Matriz de riesgo'] },
   { id:'contabilidad', name:'Contabilidad', agent:'LEDGER', role:'Director de Contabilidad AI', description:'Contabilidad financiera, fiscal y cierres.', icon:Calculator, tone:'teal', capabilities:['Contabilidad','Fiscal','Cierres'], automations:['Conciliaciones','Cierre mensual','Validaciones'] },
   { id:'facturacion', name:'Facturación AI', agent:'INVOICER', role:'Gerente de Facturación AI', description:'CFDI, cobranza, emisión y control de facturas.', icon:ReceiptText, tone:'green', capabilities:['CFDI','Cobranza','Clientes'], automations:['Emisión de recibos','Recordatorios','Validación fiscal'] },
