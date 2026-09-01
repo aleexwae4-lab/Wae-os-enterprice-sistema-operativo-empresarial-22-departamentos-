@@ -8,3 +8,4 @@
 .content:has(.care-premium)>:not(.care-premium){display:none!important}
 .content:has(.marketing-premium)>:not(.marketing-premium){display:none!important}
 .content:has(.sales-premium)>:not(.sales-premium){display:none!important}
+.content:has(.project-premium)>:not(.project-premium){display:none!important}
