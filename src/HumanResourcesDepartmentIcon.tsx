@@ -2,6 +2,7 @@ import { createPortal } from 'react-dom'
 import { UsersRound, type LucideProps } from 'lucide-react'
 import HumanResourcesModule from './HumanResourcesModule'
 import type { Department } from './data'
+import './human-resources-portal.css'
 
 const hrDepartment:Department={
   id:'rrhh',name:'Recursos Humanos',agent:'TALENT',role:'Director de Recursos Humanos AI',
