@@ -1,11 +1,12 @@
 import { useEffect, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
-import { Bot, BrainCircuit, Mic, Paperclip, Send, Sparkles, Zap } from 'lucide-react'
+import { Bot, BrainCircuit, Mic, Paperclip, Send, Sparkles, Volume2, VolumeX, Zap } from 'lucide-react'
 import { departments } from './data'
 import { buildDepartmentExpertResponse } from './departmentExpertEngine'
 import { streamEnterprise22Expert, type ExpertHistoryMessage } from './enterprise22AiClient'
 import { loadLatestEnterprise22Conversation, useEnterprise22PrivateSession } from './lib/enterprise22PrivateSession'
 import './aurora-expert-chat.css'
+import { usePremiumVoice } from './usePremiumVoice'
 
 const aurora=departments.find(d=>d.id==='ceo')??departments[0]
 type RuntimeState='ready'|'cloud'|'private'|'local'|'generating'
@@ -20,6 +21,7 @@ export default function AuroraExpertChatLayer(){
   const [conversationId,setConversationId]=useState<string|null>(null)
   const loadedPrivateKey=useRef('')
   const privateState=useEnterprise22PrivateSession()
+  const voice=usePremiumVoice(setInput)
 
   useEffect(()=>{
     const sync=()=>{
@@ -71,10 +73,10 @@ export default function AuroraExpertChatLayer(){
     try{
       const result=await streamEnterprise22Expert({department:aurora,input:text,history,privateAccess,onDelta:chunk=>setMessages(v=>v.map(m=>m.id===aiId?{...m,text:m.text+chunk,pending:true,source:privateAccess?'private':'cloud'}:m))})
       if(result.conversationId)setConversationId(result.conversationId)
-      setMessages(v=>v.map(m=>m.id===aiId?{...m,pending:false,source:result.runtime}:m));setRuntime(result.runtime==='private'?'private':'cloud')
+      setMessages(v=>v.map(m=>m.id===aiId?{...m,pending:false,source:result.runtime}:m));setRuntime(result.runtime==='private'?'private':'cloud');voice.speak(result.content)
     }catch{
       const fallback=buildDepartmentExpertResponse(aurora,text)
-      setMessages(v=>v.map(m=>m.id===aiId?{...m,text:fallback,pending:false,source:'local'}:m));setRuntime('local')
+      setMessages(v=>v.map(m=>m.id===aiId?{...m,text:fallback,pending:false,source:'local'}:m));setRuntime('local');voice.speak(fallback)
     }finally{setBusy(false)}
   }
   const runtimeLabel=runtime==='generating'?'Generando…':runtime==='private'?'Private AI':runtime==='cloud'?'WAE AI conectado':runtime==='local'?'Continuidad local':'WAE AI'
@@ -99,7 +101,8 @@ export default function AuroraExpertChatLayer(){
     <div className="aurora-expert-composer">
       <button aria-label="Adjuntar"><Paperclip size={18}/></button>
       <textarea value={input} onChange={e=>setInput(e.target.value)} placeholder="Pregúntale a AURORA sobre estrategia, dirección o decisiones..." onKeyDown={e=>{if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();void sendText(input)}}}/>
-      <button aria-label="Voz"><Mic size={18}/></button>
+      <button className={voice.listening?'listening':''} aria-label={voice.supported?'Dictar mensaje':'Dictado no disponible'} onClick={voice.toggleListening} disabled={!voice.supported}><Mic size={18}/></button>
+      <button aria-label={voice.enabled?'Desactivar respuestas por voz':'Activar respuestas por voz'} onClick={()=>voice.setEnabled(!voice.enabled)}>{voice.enabled?<Volume2 size={18}/>:<VolumeX size={18}/>}</button>
       <button className="aurora-expert-send" onClick={()=>void sendText(input)} aria-label="Enviar" disabled={busy}><Send size={17}/></button>
     </div>
     <div className="aurora-expert-note"><Bot size={12}/>{note}</div>

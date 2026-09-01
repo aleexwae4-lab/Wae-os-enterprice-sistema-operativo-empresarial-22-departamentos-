@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import {
   BarChart3, BookOpen, Bot, FileText, Gauge, Link2, MessageSquareText,
-  Mic, Paperclip, Send, Sparkles, WandSparkles, Workflow, Zap,
+  Mic, Paperclip, Send, Sparkles, Volume2, VolumeX, WandSparkles, Workflow, Zap,
 } from 'lucide-react'
 import type { Department } from './data'
 import { buildDepartmentExpertResponse, expertModePrompts } from './departmentExpertEngine'
@@ -9,6 +9,7 @@ import { streamEnterprise22Expert, type ExpertHistoryMessage } from './enterpris
 import { loadLatestEnterprise22Conversation, useEnterprise22PrivateSession } from './lib/enterprise22PrivateSession'
 import './department-agent.css'
 import './department-agent-expert.css'
+import { usePremiumVoice } from './usePremiumVoice'
 
 type AgentTab = 'chat'|'documents'|'knowledge'|'capabilities'|'dashboard'|'automations'|'integrations'
 type RuntimeState='ready'|'cloud'|'private'|'local'|'generating'
@@ -47,6 +48,7 @@ export default function DepartmentAgentWorkspace({department,documents,knowledge
   const [conversationId,setConversationId]=useState<string|null>(null)
   const loadedPrivateKey=useRef('')
   const privateState=useEnterprise22PrivateSession()
+  const voice=usePremiumVoice(setInput)
   const docs = documents ?? defaultDocuments(department.name)
   const kb = knowledge ?? defaultKnowledge(department.name)
   const expertModes = useMemo(()=>expertModePrompts(department),[department])
@@ -89,10 +91,10 @@ export default function DepartmentAgentWorkspace({department,documents,knowledge
     try{
       const result=await streamEnterprise22Expert({department,input:text,history,privateAccess,onDelta:chunk=>setMessages(v=>v.map(m=>m.id===aiId?{...m,text:m.text+chunk,pending:true,source:privateAccess?'private':'cloud'}:m))})
       if(result.conversationId)setConversationId(result.conversationId)
-      setMessages(v=>v.map(m=>m.id===aiId?{...m,pending:false,source:result.runtime}:m));setRuntime(result.runtime==='private'?'private':'cloud')
+      setMessages(v=>v.map(m=>m.id===aiId?{...m,pending:false,source:result.runtime}:m));setRuntime(result.runtime==='private'?'private':'cloud');voice.speak(result.content)
     }catch{
       const fallback=buildDepartmentExpertResponse(department,text)
-      setMessages(v=>v.map(m=>m.id===aiId?{...m,text:fallback,pending:false,source:'local'}:m));setRuntime('local')
+      setMessages(v=>v.map(m=>m.id===aiId?{...m,text:fallback,pending:false,source:'local'}:m));setRuntime('local');voice.speak(fallback)
     }finally{setBusy(false)}
   }
   const send=()=>{void sendText(input)}
@@ -130,7 +132,7 @@ export default function DepartmentAgentWorkspace({department,documents,knowledge
         {messages.length===0?<div className="dept-agent-welcome"><Sparkles size={24}/><p>Habla con <b>{department.agent}</b> como con un especialista de {department.name}.</p><small className="dept-agent-welcome-copy">{privateState.status==='private'?`Está autorizado para usar el contexto privado de ${privateState.context?.company.name} dentro de este módulo.`:'Pregunta conceptos, pide una estrategia, un plan, una capacitación o trae un problema real para diagnosticar.'}</small>{quick.map(q=><button key={q} onClick={()=>setInput(q)}><Zap size={14}/>{q}</button>)}</div>:
           messages.map(m=><div key={m.id} className={`dept-agent-message ${m.role} ${m.pending?'pending':''}`}>{m.text||<span className="dept-agent-thinking"><i/><i/><i/></span>}</div>)}
       </div>
-      <div className="dept-agent-composer"><button aria-label="Adjuntar"><Paperclip size={18}/></button><textarea value={input} onChange={e=>setInput(e.target.value)} placeholder={`Pregunta a ${department.agent} sobre ${department.name}...`} onKeyDown={e=>{if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();send()}}}/><button aria-label="Voz"><Mic size={18}/></button><button className="agent-send" onClick={send} aria-label="Enviar" disabled={busy}><Send size={17}/></button></div>
+      <div className="dept-agent-composer"><button aria-label="Adjuntar"><Paperclip size={18}/></button><textarea value={input} onChange={e=>setInput(e.target.value)} placeholder={`Pregunta a ${department.agent} sobre ${department.name}...`} onKeyDown={e=>{if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();send()}}}/><button className={voice.listening?'listening':''} aria-label={voice.supported?'Dictar mensaje':'Dictado no disponible'} onClick={voice.toggleListening} disabled={!voice.supported}><Mic size={18}/></button><button aria-label={voice.enabled?'Desactivar respuestas por voz':'Activar respuestas por voz'} onClick={()=>voice.setEnabled(!voice.enabled)}>{voice.enabled?<Volume2 size={18}/>:<VolumeX size={18}/>}</button><button className="agent-send" onClick={send} aria-label="Enviar" disabled={busy}><Send size={17}/></button></div>
       <div className="dept-agent-privacy-note">{privacyNote}</div>
     </div>}
 
