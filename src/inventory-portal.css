@@ -1,0 +1,1 @@
+.content:has(> .inventory-module) > :not(.inventory-module){display:none!important}.content:has(> .inventory-module){position:relative}
