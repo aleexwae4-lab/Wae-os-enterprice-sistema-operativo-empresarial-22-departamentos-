@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
-import { Activity, Bot, BrainCircuit, CheckCircle2, FileText, Gauge, ListChecks, Mic, Paperclip, Send, ShieldAlert, Sparkles, Volume2, VolumeX, Zap } from 'lucide-react'
+import { Activity, Bot, BrainCircuit, CheckCircle2, FileText, Gauge, ListChecks, Mic, Paperclip, Send, ShieldAlert, Volume2, VolumeX, Zap } from 'lucide-react'
 import { departments } from './data'
 import { buildDepartmentExpertResponse } from './departmentExpertEngine'
 import { streamEnterprise22Expert, type ExpertHistoryMessage } from './enterprise22AiClient'
@@ -85,9 +85,6 @@ export default function AuroraExpertChatLayer(){
     }finally{setBusy(false)}
   }
   const runtimeLabel=runtime==='generating'?'Generando…':runtime==='private'?'Private AI':runtime==='cloud'?'WAE AI conectado':runtime==='local'?'Continuidad local':'WAE AI'
-  const note=privateState.status==='private'
-    ?`Contexto privado · ${privateState.context?.company.name} · RLS + memoria ejecutiva`
-    :'Runtime efímero con continuidad local · activa Private AI para memoria empresarial.'
   const openWorkspace=(text:string)=>{localStorage.setItem('wae-workspace-draft',JSON.stringify({title:`Decisión ejecutiva · ${new Date().toLocaleDateString('es-MX')}`,body:`# Decisión ejecutiva\n\n**Origen:** AURORA · Dirección General\n**Profundidad:** ${depth}\n**Directores convocados:** ${collaborators.join(', ')||'Por definir'}\n\n${text}`}));clickNavigation('Workspace')}
   const openLeadDepartment=()=>{const agent=collaborators[0];const department=departments.find(item=>item.agent===agent);if(department)clickNavigation(department.name)}
 
@@ -102,19 +99,20 @@ export default function AuroraExpertChatLayer(){
     {busy?<div className="aurora-analysis-state"><span><i/><i/><i/></span><div><b>WAE está analizando en modo {depth==='quick'?'rápido':depth==='deep'?'profundo':'detallado'}…</b><small>Clasificando intención · convocando directores · evaluando riesgos · consolidando decisión</small></div></div>:null}
 
     <div className="aurora-expert-thread">
-      {messages.length===0?<div className="aurora-expert-welcome"><Sparkles size={23}/><h3>{privateState.status==='private'?'AURORA ya reconoce tu empresa autorizada.':'Conversa con AURORA como con un asesor ejecutivo.'}</h3><p>{privateState.status==='private'?`Puede razonar con el contexto privado de ${privateState.context?.company.name} y conservar la conversación ejecutiva por empresa.`:'Puedo explicarte conceptos empresariales, construir estrategias, convertirlas en planes, enseñarte métodos de dirección y ayudarte a decidir qué director debe intervenir.'}</p><div>
-        {['Explícame un concepto de dirección empresarial','Diseña una estrategia para mejorar mi empresa','Crea un plan ejecutivo de 90 días','Enséñame a dirigir con KPIs'].map(x=><button key={x} onClick={()=>setInput(x)}><Zap size={12}/>{x}</button>)}
-      </div></div>:messages.map(m=>m.role==='user'?<div className="aurora-expert-message user" key={m.id}>{m.text}</div>:<article className={`aurora-executive-response ${m.pending?'pending':''}`} key={m.id}><header><span><BrainCircuit size={16}/></span><div><small>DIAGNÓSTICO EJECUTIVO</small><b>{depth==='deep'?'Lectura empresarial 360°':depth==='quick'?'Respuesta ejecutiva':'Análisis y recomendación'}</b></div>{m.pending?<em>Analizando</em>:<em className="complete"><CheckCircle2 size={12}/>Listo</em>}</header>{!m.pending?<div className="executive-evidence"><span><Gauge size={12}/>Confiabilidad contextual</span><b>{privateState.status==='private'?'Alta · datos autorizados':'Condicionada · contexto conversacional'}</b></div>:null}<div className="executive-copy">{m.text||<span className="aurora-thinking"><i/><i/><i/></span>}</div>{!m.pending&&m.text?<><div className="executive-directors"><small>DIRECTORES CONVOCADOS</small><div>{(collaborators.length?collaborators:['AURORA']).map(agent=><span key={agent}>{agent}</span>)}</div></div><footer><button onClick={openLeadDepartment}><Activity size={14}/>Abrir área responsable</button><button onClick={()=>setInput(`Convierte esta recomendación en un plan de acción con responsables, KPI y fechas:\n${m.text.slice(0,1200)}`)}><ListChecks size={14}/>Crear plan</button><button onClick={()=>setInput(`Realiza una revisión de riesgos legales, financieros, operativos y tecnológicos sobre esta decisión:\n${m.text.slice(0,1200)}`)}><ShieldAlert size={14}/>Revisar riesgos</button><button onClick={()=>openWorkspace(m.text)}><FileText size={14}/>Workspace</button></footer></>:null}</article>)}
+      {messages.map(m=>m.role==='user'?<div className="aurora-expert-message user" key={m.id}>{m.text}</div>:<article className={`aurora-executive-response ${m.pending?'pending':''}`} key={m.id}><header><span><BrainCircuit size={16}/></span><div><small>DIAGNÓSTICO EJECUTIVO</small><b>{depth==='deep'?'Lectura empresarial 360°':depth==='quick'?'Respuesta ejecutiva':'Análisis y recomendación'}</b></div>{m.pending?<em>Analizando</em>:<em className="complete"><CheckCircle2 size={12}/>Listo</em>}</header>{!m.pending?<div className="executive-evidence"><span><Gauge size={12}/>Confiabilidad contextual</span><b>{privateState.status==='private'?'Alta · datos autorizados':'Condicionada · contexto conversacional'}</b></div>:null}<div className="executive-copy">{m.text||<span className="aurora-thinking"><i/><i/><i/></span>}</div>{!m.pending&&m.text?<><div className="executive-directors"><small>DIRECTORES CONVOCADOS</small><div>{(collaborators.length?collaborators:['AURORA']).map(agent=><span key={agent}>{agent}</span>)}</div></div><footer><button onClick={openLeadDepartment}><Activity size={14}/>Abrir área responsable</button><button onClick={()=>setInput(`Convierte esta recomendación en un plan de acción con responsables, KPI y fechas:\n${m.text.slice(0,1200)}`)}><ListChecks size={14}/>Crear plan</button><button onClick={()=>setInput(`Realiza una revisión de riesgos legales, financieros, operativos y tecnológicos sobre esta decisión:\n${m.text.slice(0,1200)}`)}><ShieldAlert size={14}/>Revisar riesgos</button><button onClick={()=>openWorkspace(m.text)}><FileText size={14}/>Workspace</button></footer></>:null}</article>)}
     </div>
 
-    <div className="aurora-depth"><span>Profundidad</span>{([{id:'quick',label:'Rápido'},{id:'detailed',label:'Detallado'},{id:'deep',label:'Profundo'}] as const).map(mode=><button key={mode.id} className={depth===mode.id?'active':''} onClick={()=>setDepth(mode.id)}>{mode.label}</button>)}</div>
-    <div className="aurora-expert-composer">
-      <button aria-label="Adjuntar"><Paperclip size={18}/></button>
-      <textarea value={input} onChange={e=>setInput(e.target.value)} placeholder="Pregúntale a AURORA sobre estrategia, dirección o decisiones..." onKeyDown={e=>{if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();void sendText(input)}}}/>
-      <button className={voice.listening?'listening':''} aria-label={voice.supported?'Dictar mensaje':'Dictado no disponible'} onClick={voice.toggleListening} disabled={!voice.supported}><Mic size={18}/></button>
-      <button aria-label={voice.enabled?'Desactivar respuestas por voz':'Activar respuestas por voz'} onClick={()=>voice.setEnabled(!voice.enabled)}>{voice.enabled?<Volume2 size={18}/>:<VolumeX size={18}/>}</button>
-      <button className="aurora-expert-send" onClick={()=>void sendText(input)} aria-label="Enviar" disabled={busy}><Send size={17}/></button>
+    <div className="aurora-input-dock">
+      <div className="aurora-quick-strip">{['¿Cómo vamos este mes?','Crea un empleado','Crea una tarea para Legal','Analiza mi empresa'].map(text=><button key={text} onClick={()=>setInput(text)}><Zap size={12}/>{text}</button>)}</div>
+      <div className="aurora-depth"><span>Profundidad:</span>{([{id:'quick',label:'Rápido'},{id:'detailed',label:'Detallado'},{id:'deep',label:'Profundo'}] as const).map(mode=><button key={mode.id} className={depth===mode.id?'active':''} onClick={()=>setDepth(mode.id)}>{mode.label}</button>)}</div>
+      <div className="aurora-expert-composer">
+        <button aria-label="Adjuntar"><Paperclip size={20}/></button>
+        <textarea value={input} onChange={e=>setInput(e.target.value)} placeholder="Pregúntale a WAE…" onKeyDown={e=>{if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();void sendText(input)}}}/>
+        <button className={voice.listening?'listening':''} aria-label={voice.supported?'Dictar mensaje':'Dictado no disponible'} onClick={voice.toggleListening} disabled={!voice.supported}><Mic size={19}/></button>
+        <button aria-label={voice.enabled?'Desactivar respuestas por voz':'Activar respuestas por voz'} onClick={()=>voice.setEnabled(!voice.enabled)}>{voice.enabled?<Volume2 size={18}/>:<VolumeX size={18}/>}</button>
+        <button className="aurora-expert-send" onClick={()=>void sendText(input)} aria-label="Enviar" disabled={busy}><Send size={18}/></button>
+      </div>
+      <div className="aurora-expert-note"><Bot size={12}/>CEO Chat puede crear empleados, productos, clientes y tareas; consulta áreas y verifica información crítica.</div>
     </div>
-    <div className="aurora-expert-note"><Bot size={12}/>{note}</div>
   </section>,target)
 }
