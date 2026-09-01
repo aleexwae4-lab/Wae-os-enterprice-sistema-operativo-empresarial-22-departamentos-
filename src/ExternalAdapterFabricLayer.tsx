@@ -37,7 +37,8 @@ function AdapterFabricPanel(){
       if(next.mode==='durable'&&next.tenantId){
         const [a,r]=await Promise.all([listExternalAdapters(next.tenantId),listExternalRequests(next.tenantId)])
         setAdapters(a);setRequests(r)
-        setSelectedAdapter(current=>current&&a.some(x=>x.id===current)?current:(a[0]?.id??''))
+        const credentialAdapters=a.filter(x=>x.auth_scheme!=='None')
+        setSelectedAdapter(current=>current&&credentialAdapters.some(x=>x.id===current)?current:(credentialAdapters[0]?.id??''))
       }else{setAdapters([]);setRequests([]);setSelectedAdapter('')}
     }catch(e){setError(e instanceof Error?e.message:'No fue posible actualizar Adapter Fabric.')}
     finally{if(showBusy)setBusy(false)}
@@ -67,7 +68,7 @@ function AdapterFabricPanel(){
       if(!draft.adapterKey.trim()||!draft.displayName.trim()||!draft.targetSystem.trim()||!draft.endpointUrl.trim()||!draft.allowedHost.trim())throw new Error('Completa key, nombre, sistema, endpoint HTTPS y host permitido.')
       if(!draft.endpointUrl.toLowerCase().startsWith('https://'))throw new Error('Solo se aceptan endpoints HTTPS.')
       await upsertExternalAdapter(persistence.tenantId,draft)
-      setNotice('Adapter guardado en Sandbox/Control Plane. Production permanece bloqueado hasta health probe exitoso.')
+      setNotice('Adapter guardado en Control Plane. Production permanece bloqueado hasta health probe exitoso y promoción explícita.')
       setDraft(emptyDraft)
       await refresh(false)
     }catch(e){setError(e instanceof Error?e.message:'No fue posible guardar el adapter.')}
@@ -75,7 +76,7 @@ function AdapterFabricPanel(){
   }
 
   const rotateSecret=async()=>{
-    if(!selectedAdapter)throw new Error('Selecciona un adapter.')
+    if(!selectedAdapter){setError('Selecciona un adapter que requiera credencial.');return}
     if(secret.length<8){setError('La credencial debe tener al menos 8 caracteres.');return}
     setBusy(true);setError('');setNotice('')
     try{
@@ -131,13 +132,13 @@ function AdapterFabricPanel(){
           <div className="adapter-row-main"><div className="adapter-icon"><CloudCog size={17}/></div><div><b>{a.display_name}</b><p>{a.adapter_key} · v{a.adapter_version} · {a.target_system}</p><small>{a.allowed_host??'host pendiente'}{a.capabilities.length?` · ${a.capabilities.join(' · ')}`:' · probe-only'}</small></div></div>
           <div className="adapter-row-signals">
             <span className={`adapter-pill ${statusClass(a.status)}`}>{a.status}</span>
-            <span className={`adapter-pill ${a.environment==='Production'?'prod':'sandbox'}`}>{a.environment}</span>
+            <span className={`adapter-pill ${a.environment==='Production'?'prod':'sandbox'}`}>{a.environment}{a.environment==='Production'&&!a.production_enabled?' · gated':''}</span>
             <span className={`adapter-pill ${statusClass(a.circuit_state)}`}>Circuit {a.circuit_state}</span>
             <span className={`adapter-pill ${statusClass(a.last_health_status??'pending')}`}>{a.last_health_code??'—'} · {a.last_health_latency_ms??'—'} ms</span>
           </div>
           <div className="adapter-row-actions">
             <button disabled={busy} onClick={()=>void probe(a.id)}><TestTube2 size={12}/>Probe</button>
-            <button disabled={busy||a.environment==='Production'||a.status!=='Available'||a.circuit_state!=='Closed'||a.last_health_status!=='Healthy'} onClick={()=>void promote(a.id)}><Rocket size={12}/>Production</button>
+            <button disabled={busy||a.production_enabled||a.status!=='Available'||a.circuit_state!=='Closed'||a.last_health_status!=='Healthy'} onClick={()=>void promote(a.id)}><Rocket size={12}/>{a.production_enabled?'Production ON':'Production'}</button>
           </div>
         </div>)}
       </div>
@@ -158,7 +159,7 @@ function AdapterFabricPanel(){
             <select value={draft.environment} onChange={e=>setDraft({...draft,environment:e.target.value as ExternalAdapterDraft['environment']})}><option>Sandbox</option><option>Production</option></select>
             <input type="number" min={1000} max={60000} value={draft.timeoutMs} onChange={e=>setDraft({...draft,timeoutMs:Number(e.target.value)||10000})} placeholder="Timeout ms"/>
           </div>
-          <div className="adapter-config-foot"><p>Guardar una configuración siempre desactiva Production hasta que el adapter vuelva a pasar health + circuit gate.</p><button className="adapter-primary" disabled={busy} onClick={()=>void saveAdapter()}><PlugZap size={13}/>Guardar adapter</button></div>
+          <div className="adapter-config-foot"><p>Guardar o editar una configuración desactiva Production hasta que el adapter vuelva a pasar health + circuit gate y sea promovido explícitamente.</p><button className="adapter-primary" disabled={busy} onClick={()=>void saveAdapter()}><PlugZap size={13}/>Guardar adapter</button></div>
         </div>
 
         <div className="adapter-config-card vault">
