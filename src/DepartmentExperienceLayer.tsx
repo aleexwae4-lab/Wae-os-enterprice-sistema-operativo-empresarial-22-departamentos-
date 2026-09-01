@@ -6,6 +6,7 @@ import DepartmentAgentWorkspace from './DepartmentAgentWorkspace'
 import DepartmentOperationsModule from './DepartmentOperationsModule'
 import FinanceModule from './FinanceModule'
 import LegalModule from './LegalModule'
+import AccountingModule from './AccountingModule'
 import { departmentBlueprints } from './departmentCatalog'
 import './department-experience.css'
 import './department-operations-portal.css'
@@ -74,6 +75,10 @@ export default function DepartmentExperienceLayer(){
 
   if(department.id==='legal'&&target){
     return createPortal(<LegalModule department={department}/>,target)
+  }
+
+  if(department.id==='contabilidad'&&target){
+    return createPortal(<AccountingModule department={department}/>,target)
   }
 
   const hasOperationalWorkspace=Boolean(departmentBlueprints[department.id])
