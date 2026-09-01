@@ -1,2 +1,3 @@
 .content:has(.department-ops)>:not(.department-ops){display:none!important}
 .content:has(.finance-premium)>:not(.finance-premium){display:none!important}
+.content:has(.legal-premium)>:not(.legal-premium){display:none!important}
