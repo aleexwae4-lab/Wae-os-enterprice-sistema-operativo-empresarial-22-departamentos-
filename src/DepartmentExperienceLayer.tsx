@@ -21,9 +21,17 @@ import SecurityModule from './SecurityModule'
 import ComplianceModule from './ComplianceModule'
 import OperationsModule from './OperationsModule'
 import TechnologyModule from './TechnologyModule'
+import EnterpriseBackboneModule from './EnterpriseBackboneModule'
 import { departmentBlueprints } from './departmentCatalog'
 import './department-experience.css'
 import './department-operations-portal.css'
+
+const platformDepartment:Department={
+  id:'platform-backbone',name:'Centro de Plataforma',agent:'AURORA',role:'Enterprise Control Plane AI',
+  description:'Event fabric, command governance, workflows, policy gates, audit y coordinación multiagente.',
+  icon:Bot,tone:'violet',capabilities:['Event fabric','Command bus','Workflow orchestration','Policy gates','Audit trail'],
+  automations:['Correlation tracing','Approval gates','Adapter readiness','Audit logging'],
+}
 
 function activeDepartmentFromDom():Department|null{
   const active=document.querySelector('.department-nav button.active')
@@ -32,11 +40,12 @@ function activeDepartmentFromDom():Department|null{
     const byDepartment=departments.find(d=>d.name===label)
     if(byDepartment)return byDepartment
   }
-  const navActive=[...document.querySelectorAll('.nav-group button.active')].find(b=>['Analítica','Documentos IA','Capacitación'].includes(b.textContent?.trim()??''))
+  const navActive=[...document.querySelectorAll('.nav-group button.active')].find(b=>['Analítica','Documentos IA','Capacitación','Centro de Plataforma'].includes(b.textContent?.trim()??''))
   const strategic=navActive?.textContent?.trim()
   if(strategic==='Analítica')return departments.find(d=>d.id==='analitica')??null
   if(strategic==='Documentos IA')return departments.find(d=>d.id==='documentos')??null
   if(strategic==='Capacitación')return departments.find(d=>d.id==='capacitacion')??null
+  if(strategic==='Centro de Plataforma')return platformDepartment
   return null
 }
 
@@ -100,6 +109,7 @@ export default function DepartmentExperienceLayer(){
   if(department.id==='compliance'&&target){return createPortal(<ComplianceModule department={department}/>,target)}
   if(department.id==='operaciones'&&target){return createPortal(<OperationsModule department={department}/>,target)}
   if(department.id==='tecnologia'&&target){return createPortal(<TechnologyModule department={department}/>,target)}
+  if(department.id==='platform-backbone'&&target){return createPortal(<EnterpriseBackboneModule department={department}/>,target)}
 
   const hasOperationalWorkspace=Boolean(departmentBlueprints[department.id])
   if(hasOperationalWorkspace&&target){return createPortal(<DepartmentOperationsModule department={department}/>,target)}
