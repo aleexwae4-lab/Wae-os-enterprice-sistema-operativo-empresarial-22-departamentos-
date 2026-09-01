@@ -2,6 +2,7 @@ import { createPortal } from 'react-dom'
 import { Boxes, type LucideProps } from 'lucide-react'
 import InventoryModule from './InventoryModule'
 import './inventory.css'
+import './inventory-portal.css'
 
 export default function InventoryDepartmentIcon(props:LucideProps) {
   const size = typeof props.size === 'number' ? props.size : Number(props.size ?? 24)
