@@ -7,7 +7,11 @@ const expertProxy=enterprise22ExpertProxy()
 const safeExpertProxy={
   ...expertProxy,
   configureServer(server:any){expertProxy.configureServer?.(server)},
-  configurePreviewServer(server:any){expertProxy.configurePreviewServer?.(server)},
+  configurePreviewServer(server:any){
+    const privateAiConfigured=Boolean(process.env.VITE_SUPABASE_URL&&process.env.VITE_SUPABASE_PUBLISHABLE_KEY)
+    console.info(`[WAE Enterprise22] expert-proxy=mounted private-ai-configured=${privateAiConfigured}`)
+    expertProxy.configurePreviewServer?.(server)
+  },
 }
 
 export default defineConfig({

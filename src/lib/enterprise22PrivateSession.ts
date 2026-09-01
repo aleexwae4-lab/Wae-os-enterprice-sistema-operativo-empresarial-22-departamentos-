@@ -41,6 +41,8 @@ const listeners=new Set<()=>void>()
 let initialized=false
 let authSubscription:{unsubscribe:()=>void}|null=null
 let activationVersion=0
+let activationToken=''
+let activationPromise:Promise<void>|null=null
 let state:Enterprise22PrivateState=client
   ?{status:'guest',session:null,accessToken:'',userEmail:'',context:null,notice:'',error:''}
   :{status:'unconfigured',session:null,accessToken:'',userEmail:'',context:null,notice:'Supabase Private AI no está configurado.',error:''}
@@ -63,22 +65,29 @@ async function loadContext(companyId?:string|null){
 
 async function activateSession(session:Session){
   if(!client)return
+  if(activationPromise&&activationToken===session.access_token)return activationPromise
+  const token=session.access_token
+  activationToken=token
   const version=++activationVersion
-  emit({status:'loading',session,accessToken:session.access_token,userEmail:session.user.email||'',context:null,error:'',notice:'Sincronizando contexto privado…'})
-  try{
-    const boot=await client.rpc('wae_enterprise22_bootstrap_private_context')
-    if(boot.error)throw boot.error
-    let requested=savedCompanyId()
-    const bootCompany=(boot.data as {company_id?:string}|null)?.company_id
-    if(!requested&&bootCompany)requested=bootCompany
-    let context:Enterprise22PrivateContext
-    try{context=await loadContext(requested)}catch{context=await loadContext(bootCompany||null)}
-    if(version!==activationVersion)return
-    emit({status:'private',session,accessToken:session.access_token,userEmail:session.user.email||'',context,error:'',notice:'Private AI activo'})
-  }catch(error){
-    if(version!==activationVersion)return
-    emit({status:'error',session,accessToken:session.access_token,userEmail:session.user.email||'',context:null,error:error instanceof Error?error.message:'private_context_failed',notice:'No se pudo abrir el contexto privado.'})
-  }
+  const run=(async()=>{
+    emit({status:'loading',session,accessToken:token,userEmail:session.user.email||'',context:null,error:'',notice:'Sincronizando contexto privado…'})
+    try{
+      const boot=await client.rpc('wae_enterprise22_bootstrap_private_context')
+      if(boot.error)throw boot.error
+      let requested=savedCompanyId()
+      const bootCompany=(boot.data as {company_id?:string}|null)?.company_id
+      if(!requested&&bootCompany)requested=bootCompany
+      let context:Enterprise22PrivateContext
+      try{context=await loadContext(requested)}catch{context=await loadContext(bootCompany||null)}
+      if(version!==activationVersion)return
+      emit({status:'private',session,accessToken:token,userEmail:session.user.email||'',context,error:'',notice:'Private AI activo'})
+    }catch(error){
+      if(version!==activationVersion)return
+      emit({status:'error',session,accessToken:token,userEmail:session.user.email||'',context:null,error:error instanceof Error?error.message:'private_context_failed',notice:'No se pudo abrir el contexto privado.'})
+    }
+  })()
+  activationPromise=run
+  try{await run}finally{if(activationToken===token)activationPromise=null}
 }
 
 export async function initializeEnterprise22PrivateSession(){
@@ -89,7 +98,12 @@ export async function initializeEnterprise22PrivateSession(){
   else emit({status:'guest',session:null,accessToken:'',userEmail:'',context:null,error:'',notice:''})
   const {data}=client.auth.onAuthStateChange((_event,session)=>{
     if(session)void activateSession(session)
-    else{activationVersion++;emit({status:'guest',session:null,accessToken:'',userEmail:'',context:null,error:'',notice:''})}
+    else{
+      activationVersion++
+      activationToken=''
+      activationPromise=null
+      emit({status:'guest',session:null,accessToken:'',userEmail:'',context:null,error:'',notice:''})
+    }
   })
   authSubscription=data.subscription
 }
@@ -119,6 +133,8 @@ export async function signUpEnterprise22(email:string,password:string){
 export async function signOutEnterprise22(){
   if(!client)return
   activationVersion++
+  activationToken=''
+  activationPromise=null
   await client.auth.signOut()
   emit({status:'guest',session:null,accessToken:'',userEmail:'',context:null,error:'',notice:''})
 }
@@ -162,4 +178,11 @@ export async function loadLatestEnterprise22Conversation(departmentKey:string):P
   }
 }
 
-export function disposeEnterprise22PrivateSession(){authSubscription?.unsubscribe();authSubscription=null;initialized=false}
+export function disposeEnterprise22PrivateSession(){
+  authSubscription?.unsubscribe()
+  authSubscription=null
+  activationVersion++
+  activationToken=''
+  activationPromise=null
+  initialized=false
+}
