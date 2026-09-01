@@ -9,6 +9,7 @@ import { departments, executiveMetrics, riskMetrics, type Department } from './d
 import {
   CognitiveCore, KnowledgeGovernance, MultimodalSupport, SectorContextPanel,
 } from './EvolutionPanels'
+import PremiumWorkspace from './PremiumWorkspace'
 
 type View =
   | 'ceo'
@@ -294,7 +295,7 @@ function Training(){return <><PageHead title="Capacitación" subtitle="Cursos, e
 
 function Platform(){return <><PageHead title="Centro de Plataforma" subtitle="Configuración, usuarios, roles, equipos, seguridad, licencias, flags y auditoría."/><div className="platform-grid">{['Configuración','Usuarios','Roles','Equipos','API Keys','Feature Flags','Licencias','Eventos'].map(x=><button key={x}><Settings2 size={17}/><span>{x}</span><ChevronRight size={15}/></button>)}</div><section className="panel form-panel"><h2>Variable empresarial</h2><div className="form-grid"><Field label="Key" value="finance.tax_rate"/><Field label="Valor" value="16"/><Field label="Tipo" value="number"/><Field label="Scope" value="Empresa"/></div><button className="primary">Guardar</button></section></>}
 
-function Workspace(){return <><PageHead title="WAE Workspace" subtitle="Editor universal: documento, IA, outline, versiones y autosave en el mismo flujo."/><div className="workspace-evolved"><aside className="workspace-outline panel"><span className="eyebrow">OUTLINE</span><button className="active">WAE OS Enterprise</button><button>Arquitectura</button><button>Operaciones</button><button>Riesgos</button><hr/><small>v12 · guardado automático</small></aside><section className="workspace panel"><div className="workspace-toolbar"><button>H1</button><button>H2</button><button>• Lista</button><button>✓ Tarea</button><button>Tabla</button><button>Adjuntar</button><span>Autosave ✓</span></div><textarea defaultValue={'WAE OS Enterprise\n\nSistema operativo empresarial\n\n22 departamentos coordinados por inteligencia artificial.\n\nEl editor conserva formato, historial de versiones y permite seguir conversando con la IA mientras se trabaja.'}/></section><aside className="workspace-ai panel"><div className="ai-orb"><Sparkles size={17}/></div><b>IA del documento</b><p>Selecciona texto o solicita análisis sobre el documento abierto.</p><button>Resumir</button><button>Detectar riesgos</button><button>Convertir en tareas</button><button>Buscar evidencia</button></aside></div></>}
+function Workspace(){return <PremiumWorkspace/>}
 
 function Knowledge(){return <><PageHead title="Memoria Empresarial" subtitle="Biblioteca corporativa inteligente con búsqueda híbrida, semántica, citas y aislamiento por tenant/departamento/agente."/><section className="panel"><div className="searchbox knowledge-search"><Search size={16}/><input placeholder="Buscar con lenguaje natural en la base corporativa..."/></div><div className="knowledge-list">{['Manual de operación','Políticas corporativas','Contratos marco','Procedimientos financieros','Kit de marketing','Normativa y compliance'].map(x=><div key={x}><FileText size={17}/><span>{x}</span><small>Indexado · citable</small></div>)}</div></section><KnowledgeGovernance/></>}
 

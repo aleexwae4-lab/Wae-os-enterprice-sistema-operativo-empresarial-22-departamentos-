@@ -113,7 +113,7 @@ export default function DepartmentAgentWorkspace({department,documents,knowledge
     <div className="dept-agent-expertbar">
       <div className="dept-agent-expert-id"><Sparkles size={13}/><span><b>{privateState.status==='private'?'PRIVATE EXPERT MODE':'EXPERT MODE'}</b><small>{privateState.status==='private'?`Contexto autorizado de ${privateState.context?.company.name}`:`Especialista en ${department.name} · explica, diseña, enseña y diagnostica`}</small></span></div>
       <div className="dept-agent-expert-actions">
-        {['Explicar','Estrategia','Plan','Capacitar'].map((label,i)=><button key={label} onClick={()=>setInput(expertModes[i])}>{label}</button>)}
+        {['Explicar','Estrategia','Plan','Capacitar','Ejecutar','Documento','Decidir'].map((label,i)=><button key={label} onClick={()=>setInput(expertModes[i])}>{label}</button>)}
       </div>
     </div>
 
@@ -130,7 +130,7 @@ export default function DepartmentAgentWorkspace({department,documents,knowledge
     {tab==='chat'&&<div className="dept-agent-chat">
       <div className="dept-agent-thread">
         {messages.length===0?<div className="dept-agent-welcome"><Sparkles size={24}/><p>Habla con <b>{department.agent}</b> como con un especialista de {department.name}.</p><small className="dept-agent-welcome-copy">{privateState.status==='private'?`Está autorizado para usar el contexto privado de ${privateState.context?.company.name} dentro de este módulo.`:'Pregunta conceptos, pide una estrategia, un plan, una capacitación o trae un problema real para diagnosticar.'}</small>{quick.map(q=><button key={q} onClick={()=>setInput(q)}><Zap size={14}/>{q}</button>)}</div>:
-          messages.map(m=><div key={m.id} className={`dept-agent-message ${m.role} ${m.pending?'pending':''}`}>{m.text||<span className="dept-agent-thinking"><i/><i/><i/></span>}</div>)}
+          messages.map(m=><div key={m.id} className={`dept-agent-message ${m.role} ${m.pending?'pending':''}`}>{m.text||<span className="dept-agent-thinking"><i/><i/><i/></span>}{m.role==='ai'&&!m.pending&&m.text?<button className="dept-message-workspace" onClick={()=>onOpenWorkspace(`${department.name} · ${new Date().toLocaleDateString('es-MX')}`,`# Entregable de ${department.name}\n\n**Agente:** ${department.agent}\n\n${m.text}`)}><FileText size={12}/>Continuar en Workspace</button>:null}</div>)}
       </div>
       <div className="dept-agent-composer"><button aria-label="Adjuntar"><Paperclip size={18}/></button><textarea value={input} onChange={e=>setInput(e.target.value)} placeholder={`Pregunta a ${department.agent} sobre ${department.name}...`} onKeyDown={e=>{if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();send()}}}/><button className={voice.listening?'listening':''} aria-label={voice.supported?'Dictar mensaje':'Dictado no disponible'} onClick={voice.toggleListening} disabled={!voice.supported}><Mic size={18}/></button><button aria-label={voice.enabled?'Desactivar respuestas por voz':'Activar respuestas por voz'} onClick={()=>voice.setEnabled(!voice.enabled)}>{voice.enabled?<Volume2 size={18}/>:<VolumeX size={18}/>}</button><button className="agent-send" onClick={send} aria-label="Enviar" disabled={busy}><Send size={17}/></button></div>
       <div className="dept-agent-privacy-note">{privacyNote}</div>

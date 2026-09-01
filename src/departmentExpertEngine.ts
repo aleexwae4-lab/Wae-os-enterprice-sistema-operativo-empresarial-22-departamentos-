@@ -113,5 +113,8 @@ export function expertModePrompts(department:Department){
     `Diseña una estrategia de ${department.name}`,
     'Crea un plan paso a paso',
     `Enséñame a trabajar mejor en ${department.name}`,
+    `Ayúdame a ejecutar una tarea real de ${department.name} paso a paso`,
+    `Redacta un documento profesional de ${department.name} listo para Workspace`,
+    `Analiza esta decisión de ${department.name}, compara opciones y recomienda una ruta`,
   ]
 }

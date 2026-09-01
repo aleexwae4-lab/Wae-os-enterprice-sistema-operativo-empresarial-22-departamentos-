@@ -19,6 +19,7 @@ export default function AuroraExpertChatLayer(){
   const [runtime,setRuntime]=useState<RuntimeState>('ready')
   const [busy,setBusy]=useState(false)
   const [conversationId,setConversationId]=useState<string|null>(null)
+  const [collaborators,setCollaborators]=useState<string[]>([])
   const loadedPrivateKey=useRef('')
   const privateState=useEnterprise22PrivateSession()
   const voice=usePremiumVoice(setInput)
@@ -71,7 +72,7 @@ export default function AuroraExpertChatLayer(){
       :undefined
     setInput('');setBusy(true);setRuntime('generating');setMessages(v=>[...v,{id:userId,role:'user',text},{id:aiId,role:'ai',text:'',pending:true}])
     try{
-      const result=await streamEnterprise22Expert({department:aurora,input:text,history,privateAccess,onDelta:chunk=>setMessages(v=>v.map(m=>m.id===aiId?{...m,text:m.text+chunk,pending:true,source:privateAccess?'private':'cloud'}:m))})
+      const result=await streamEnterprise22Expert({department:aurora,input:text,history,privateAccess,onDelta:chunk=>setMessages(v=>v.map(m=>m.id===aiId?{...m,text:m.text+chunk,pending:true,source:privateAccess?'private':'cloud'}:m)),onMeta:meta=>{if(Array.isArray(meta.collaborators))setCollaborators(meta.collaborators.map(item=>typeof item==='object'&&item&&'agent' in item?String(item.agent):'').filter(Boolean))}})
       if(result.conversationId)setConversationId(result.conversationId)
       setMessages(v=>v.map(m=>m.id===aiId?{...m,pending:false,source:result.runtime}:m));setRuntime(result.runtime==='private'?'private':'cloud');voice.speak(result.content)
     }catch{
@@ -91,6 +92,7 @@ export default function AuroraExpertChatLayer(){
       <div><small>{privateState.status==='private'?'AURORA · PRIVATE EXECUTIVE MODE':'AURORA · EXECUTIVE EXPERT MODE'}</small><b>Chief Executive AI</b><p>{privateState.status==='private'?`Empresa activa: ${privateState.context?.company.name}`:'Estrategia · gobierno · KPIs · decisiones · coordinación multiagente'}</p></div>
       <span className={`aurora-runtime ${runtime}`}><i/>{runtimeLabel}</span>
     </div>
+    <div className="aurora-orchestration"><span>AURORA COMMAND FABRIC</span><b>CEO + 21 directores conectados</b>{collaborators.length>0?<div>{collaborators.map(agent=><em key={agent}>{agent}</em>)}</div>:<small>Detecta el área responsable, reúne colaboradores y entrega una decisión ejecutiva integrada.</small>}</div>
 
     <div className="aurora-expert-thread">
       {messages.length===0?<div className="aurora-expert-welcome"><Sparkles size={23}/><h3>{privateState.status==='private'?'AURORA ya reconoce tu empresa autorizada.':'Conversa con AURORA como con un asesor ejecutivo.'}</h3><p>{privateState.status==='private'?`Puede razonar con el contexto privado de ${privateState.context?.company.name} y conservar la conversación ejecutiva por empresa.`:'Puedo explicarte conceptos empresariales, construir estrategias, convertirlas en planes, enseñarte métodos de dirección y ayudarte a decidir qué director debe intervenir.'}</p><div>
