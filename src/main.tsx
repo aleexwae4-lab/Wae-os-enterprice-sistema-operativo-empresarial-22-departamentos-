@@ -4,6 +4,7 @@ import { checkEnterprise22Database, type DatabaseConnectionState } from './lib/e
 import './styles.css'
 import './evolution.css'
 import './clip-reference.css'
+import './ceo-chat.css'
 
 const rootElement = document.getElementById('root')
 
