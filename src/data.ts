@@ -1,9 +1,10 @@
 import {
-  Activity, BadgeDollarSign, BarChart3, BookOpenCheck, Boxes, BriefcaseBusiness,
+  Activity, BadgeDollarSign, BarChart3, BookOpenCheck, BriefcaseBusiness,
   Calculator, ChartNoAxesCombined, ClipboardCheck, Cpu, FileText,
   Fingerprint, Gavel, Headphones, Landmark, Megaphone, Network, PackageCheck,
   ReceiptText, ShieldCheck, ShoppingCart, UsersRound, WalletCards,
 } from 'lucide-react'
+import InventoryDepartmentIcon from './InventoryDepartmentIcon'
 
 export type Department = {
   id: string
@@ -25,7 +26,7 @@ export const departments: Department[] = [
   { id:'contabilidad', name:'Contabilidad', agent:'LEDGER', role:'Director de Contabilidad AI', description:'Contabilidad financiera, fiscal y cierres.', icon:Calculator, tone:'teal', capabilities:['Contabilidad','Fiscal','Cierres'], automations:['Conciliaciones','Cierre mensual','Validaciones'] },
   { id:'facturacion', name:'Facturación AI', agent:'INVOICER', role:'Gerente de Facturación AI', description:'CFDI, cobranza, emisión y control de facturas.', icon:ReceiptText, tone:'green', capabilities:['CFDI','Cobranza','Clientes'], automations:['Emisión de recibos','Recordatorios','Validación fiscal'] },
   { id:'nominas', name:'Nóminas AI', agent:'PAYROLL', role:'Gerente de Nóminas AI', description:'Nómina, prestaciones, finiquitos y calendario laboral.', icon:WalletCards, tone:'fuchsia', capabilities:['Nómina','Prestaciones','Finiquitos'], automations:['Cálculo de prestaciones','Recibos','Aguinaldo y PTU'] },
-  { id:'inventarios', name:'Inventarios', agent:'MERIDIAN', role:'Director de Inventarios AI', description:'Stock, rotación, mínimos, máximos y movimientos.', icon:Boxes, tone:'cyan', capabilities:['Stock','Rotación','Almacenes'], automations:['Reorden','Alertas de stock','Conteo cíclico'] },
+  { id:'inventarios', name:'Inventarios', agent:'MERIDIAN', role:'Director de Inventarios AI', description:'Productos, almacenes, movimientos y reposición inteligente.', icon:InventoryDepartmentIcon as unknown as typeof Activity, tone:'cyan', capabilities:['Productos','Movimientos','Reposición IA'], automations:['Reorden inteligente','Alertas de stock','Registro de movimientos'] },
   { id:'proveedores', name:'Proveedores', agent:'SOURCE', role:'Director de Abastecimiento AI', description:'Proveedores, SLA, costos y evaluación de suministro.', icon:PackageCheck, tone:'orange', capabilities:['Directorio','Evaluación','SLA'], automations:['Scorecards','Renovaciones','Alertas de costo'] },
   { id:'compras', name:'Compras', agent:'PROCURE', role:'Director de Compras AI', description:'Solicitudes, órdenes, comparativos y autorizaciones.', icon:ShoppingCart, tone:'blue', capabilities:['Órdenes de compra','Cotizaciones','Aprobaciones'], automations:['Comparativo de ofertas','Aprobación','Seguimiento'] },
   { id:'activos', name:'Activos', agent:'APEX', role:'Director de Activos AI', description:'Activos fijos, depreciación, asignaciones y mantenimiento.', icon:Landmark, tone:'indigo', capabilities:['Activos fijos','Depreciación','Custodia'], automations:['Mantenimiento','Depreciación','Inventario físico'] },
