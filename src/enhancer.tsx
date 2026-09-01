@@ -3,6 +3,7 @@ import ReactDOM from 'react-dom/client'
 import DepartmentExperienceLayer from './DepartmentExperienceLayer'
 import CompaniesPortalLayer from './CompaniesPortalLayer'
 import ExecutionPersistenceLayer from './ExecutionPersistenceLayer'
+import ExternalAdapterFabricLayer from './ExternalAdapterFabricLayer'
 
 const host=document.createElement('div')
 host.id='wae-department-experience-root'
@@ -12,5 +13,6 @@ ReactDOM.createRoot(host).render(
     <DepartmentExperienceLayer/>
     <CompaniesPortalLayer/>
     <ExecutionPersistenceLayer/>
+    <ExternalAdapterFabricLayer/>
   </React.StrictMode>
 )
