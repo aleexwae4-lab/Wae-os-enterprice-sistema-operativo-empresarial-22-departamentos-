@@ -4,6 +4,7 @@ import DepartmentExperienceLayer from './DepartmentExperienceLayer'
 import CompaniesPortalLayer from './CompaniesPortalLayer'
 import ExecutionPersistenceLayer from './ExecutionPersistenceLayer'
 import ExternalAdapterFabricLayer from './ExternalAdapterFabricLayer'
+import AuroraExpertChatLayer from './AuroraExpertChatLayer'
 
 const host=document.createElement('div')
 host.id='wae-department-experience-root'
@@ -14,5 +15,6 @@ ReactDOM.createRoot(host).render(
     <CompaniesPortalLayer/>
     <ExecutionPersistenceLayer/>
     <ExternalAdapterFabricLayer/>
+    <AuroraExpertChatLayer/>
   </React.StrictMode>
 )
