@@ -1,8 +1,12 @@
 import { useEffect, useMemo, useState } from 'react'
+import { createPortal } from 'react-dom'
 import { Bot, X } from 'lucide-react'
 import { departments, type Department } from './data'
 import DepartmentAgentWorkspace from './DepartmentAgentWorkspace'
+import DepartmentOperationsModule from './DepartmentOperationsModule'
+import { departmentBlueprints } from './departmentCatalog'
 import './department-experience.css'
+import './department-operations-portal.css'
 
 function activeDepartmentFromDom():Department|null{
   const active=document.querySelector('.department-nav button.active')
@@ -33,11 +37,14 @@ function injectWorkspaceDraft(){
 export default function DepartmentExperienceLayer(){
   const [department,setDepartment]=useState<Department|null>(null)
   const [open,setOpen]=useState(false)
+  const [target,setTarget]=useState<HTMLElement|null>(null)
 
   useEffect(()=>{
     const sync=()=>{
       const next=activeDepartmentFromDom()
       setDepartment(next)
+      const content=document.querySelector('.content')
+      setTarget(content instanceof HTMLElement?content:null)
       if(!next)setOpen(false)
       injectWorkspaceDraft()
     }
@@ -50,6 +57,12 @@ export default function DepartmentExperienceLayer(){
   const docs=useMemo(()=>department?[`Reporte ejecutivo · ${department.name}`,`Política operativa · ${department.name}`,`Procedimiento · ${department.name}`,`Checklist · ${department.name}`,`Plan de acción · ${department.name}`]:[],[department])
 
   if(!department)return null
+
+  const hasOperationalWorkspace=Boolean(departmentBlueprints[department.id])
+  if(hasOperationalWorkspace&&target){
+    return createPortal(<DepartmentOperationsModule department={department}/>,target)
+  }
+
   return <>
     <button className={`department-agent-launcher tone-${department.tone}`} onClick={()=>setOpen(true)} title={`Abrir ${department.agent}`}><Bot size={21}/><span>{department.agent}</span></button>
     {open&&<div className="department-agent-overlay"><div className="department-agent-dialog"><button className="department-agent-close" onClick={()=>setOpen(false)}><X size={20}/></button><DepartmentAgentWorkspace department={department} documents={docs} onOpenWorkspace={(title,body)=>{openWorkspaceDraft(title,body);setOpen(false)}}/></div></div>}
