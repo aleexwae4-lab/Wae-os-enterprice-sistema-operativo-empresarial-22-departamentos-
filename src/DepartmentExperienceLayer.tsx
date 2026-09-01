@@ -17,6 +17,7 @@ import ProjectModule from './ProjectModule'
 import AnalyticsModule from './AnalyticsModule'
 import DocumentIntelligenceModule from './DocumentIntelligenceModule'
 import AcademyModule from './AcademyModule'
+import SecurityModule from './SecurityModule'
 import { departmentBlueprints } from './departmentCatalog'
 import './department-experience.css'
 import './department-operations-portal.css'
@@ -92,6 +93,7 @@ export default function DepartmentExperienceLayer(){
   if(department.id==='analitica'&&target){return createPortal(<AnalyticsModule department={department}/>,target)}
   if(department.id==='documentos'&&target){return createPortal(<DocumentIntelligenceModule department={department}/>,target)}
   if(department.id==='capacitacion'&&target){return createPortal(<AcademyModule department={department}/>,target)}
+  if(department.id==='seguridad'&&target){return createPortal(<SecurityModule department={department}/>,target)}
 
   const hasOperationalWorkspace=Boolean(departmentBlueprints[department.id])
   if(hasOperationalWorkspace&&target){return createPortal(<DepartmentOperationsModule department={department}/>,target)}
