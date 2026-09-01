@@ -3,3 +3,4 @@
 .content:has(.legal-premium)>:not(.legal-premium){display:none!important}
 .content:has(.accounting-premium)>:not(.accounting-premium){display:none!important}
 .content:has(.supplier-premium)>:not(.supplier-premium){display:none!important}
+.content:has(.procurement-premium)>:not(.procurement-premium){display:none!important}
