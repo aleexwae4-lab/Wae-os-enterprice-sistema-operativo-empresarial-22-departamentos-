@@ -1,0 +1,1 @@
+.content:has(.payroll-module)>:not(.payroll-module){display:none!important}.payroll-module{max-width:1180px;margin:0 auto;padding:2px 0 40px}@media(max-width:760px){.payroll-module{padding:0 2px 30px}}
