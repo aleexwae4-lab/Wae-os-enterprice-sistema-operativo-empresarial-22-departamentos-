@@ -20,6 +20,7 @@ import AcademyModule from './AcademyModule'
 import SecurityModule from './SecurityModule'
 import ComplianceModule from './ComplianceModule'
 import OperationsModule from './OperationsModule'
+import TechnologyModule from './TechnologyModule'
 import { departmentBlueprints } from './departmentCatalog'
 import './department-experience.css'
 import './department-operations-portal.css'
@@ -98,6 +99,7 @@ export default function DepartmentExperienceLayer(){
   if(department.id==='seguridad'&&target){return createPortal(<SecurityModule department={department}/>,target)}
   if(department.id==='compliance'&&target){return createPortal(<ComplianceModule department={department}/>,target)}
   if(department.id==='operaciones'&&target){return createPortal(<OperationsModule department={department}/>,target)}
+  if(department.id==='tecnologia'&&target){return createPortal(<TechnologyModule department={department}/>,target)}
 
   const hasOperationalWorkspace=Boolean(departmentBlueprints[department.id])
   if(hasOperationalWorkspace&&target){return createPortal(<DepartmentOperationsModule department={department}/>,target)}
