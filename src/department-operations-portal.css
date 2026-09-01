@@ -10,3 +10,4 @@
 .content:has(.sales-premium)>:not(.sales-premium){display:none!important}
 .content:has(.project-premium)>:not(.project-premium){display:none!important}
 .content:has(.analytics-premium)>:not(.analytics-premium){display:none!important}
+.content:has(.archive-premium)>:not(.archive-premium){display:none!important}
