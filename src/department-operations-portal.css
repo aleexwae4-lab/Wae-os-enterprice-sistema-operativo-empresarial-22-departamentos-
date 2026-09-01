@@ -7,3 +7,4 @@
 .content:has(.asset-premium)>:not(.asset-premium){display:none!important}
 .content:has(.care-premium)>:not(.care-premium){display:none!important}
 .content:has(.marketing-premium)>:not(.marketing-premium){display:none!important}
+.content:has(.sales-premium)>:not(.sales-premium){display:none!important}
