@@ -1,3 +1,5 @@
+import { createHash } from 'node:crypto'
+
 const DEFAULT_SUPABASE_URL='https://pbswcbryxawsmltyromd.supabase.co'
 const DEMO_API=`${DEFAULT_SUPABASE_URL}/functions/v1/wae-os-pro-demo-api`
 const RESILIENT_STREAM=`${DEFAULT_SUPABASE_URL}/functions/v1/wae-demo-resilient-stream-v70`
@@ -48,17 +50,17 @@ function rateOk(key){const now=Date.now(),windowMs=10*60*1000,limit=72;let bucke
 function historyOf(value){if(!Array.isArray(value))return[];const out=[];let chars=0;for(const raw of value.slice(-12)){if(!raw||typeof raw!=='object')continue;const role=raw.role==='assistant'?'assistant':raw.role==='user'?'user':'';const content=clean(raw.content,3500);if(!role||!content)continue;if(chars+content.length>18000)break;out.push({role,content});chars+=content.length}return out}
 function orchestrationPlan(input){const matches=orchestrationSignals.filter(([,agent,pattern])=>pattern.test(input)).map(([department,agent])=>({department,agent}));if(!matches.length)matches.push({department:'operaciones',agent:'ORBIT'},{department:'analitica',agent:'INSIGHT'});return matches.slice(0,6)}
 const operationCatalog=[
-  {entity:'empleado',pattern:/\b(?:crea|crear|agrega|agregar|registra|registrar|contrata|contratar)\b[\s\S]{0,80}\b(?:empleado|colaborador|persona)\b/i,owner:'TALENT',required:[['Nombre legal',/\b(?:nombre legal|nombre completo|llamad[oa])\b/i],['Puesto',/\b(?:puesto|cargo|rol)\b/i],['Departamento',/\b(?:departamento|[aá]rea)\b/i],['Salario',/\b(?:salario|sueldo|remuneraci[oó]n)\b/i],['Fecha de ingreso',/\b(?:fecha de ingreso|ingresa|inicio)\b/i],['Tipo de contrato',/\b(?:contrato|temporal|indefinido|honorarios)\b/i],['RFC o CURP',/\b(?:rfc|curp)\b/i]]},
-  {entity:'cliente',pattern:/\b(?:crea|crear|agrega|agregar|registra|registrar)\b[\s\S]{0,80}\bcliente\b/i,owner:'CARE',required:[['Nombre o razón social',/\b(?:nombre|raz[oó]n social)\b/i],['Contacto',/\b(?:correo|email|tel[eé]fono|contacto)\b/i],['RFC',/\brfc\b/i],['Condiciones comerciales',/\b(?:condiciones|cr[eé]dito|pago|tarifa)\b/i]]},
-  {entity:'producto',pattern:/\b(?:crea|crear|agrega|agregar|registra|registrar)\b[\s\S]{0,80}\b(?:producto|servicio)\b/i,owner:'MERIDIAN',required:[['Nombre',/\bnombre\b/i],['SKU o identificador',/\b(?:sku|identificador|c[oó]digo)\b/i],['Precio',/\b(?:precio|tarifa|costo)\b/i],['Inventario o disponibilidad',/\b(?:inventario|stock|disponibilidad)\b/i]]},
-  {entity:'tarea',pattern:/\b(?:crea|crear|asigna|asignar|registra|registrar)\b[\s\S]{0,80}\btarea\b/i,owner:'PMO',required:[['Objetivo',/\b(?:objetivo|para|tarea)\b/i],['Responsable',/\b(?:responsable|asigna|departamento|[aá]rea)\b/i],['Fecha límite',/\b(?:fecha|vence|l[ií]mite|plazo|hoy|ma[ñn]ana)\b/i],['Prioridad',/\b(?:prioridad|cr[ií]tica|alta|media|baja)\b/i]]},
-  {entity:'proyecto',pattern:/\b(?:crea|crear|abre|abrir|registra|registrar)\b[\s\S]{0,80}\bproyecto\b/i,owner:'PMO',required:[['Objetivo',/\bobjetivo\b/i],['Responsable',/\b(?:responsable|owner|l[ií]der)\b/i],['Fecha objetivo',/\b(?:fecha|plazo|deadline)\b/i],['Presupuesto',/\bpresupuesto\b/i]]}
+  {entity:'empleado',pattern:/\b(?:crea|crear|agrega|agregar|registra|registrar|contrata|contratar)\b[\s\S]{0,80}\b(?:empleado|colaborador|persona)\b/i,owner:'TALENT',risk:'Alto',approver:'CEO o RR.HH. autorizado',required:[['Nombre legal',/\b(?:nombre legal|nombre completo|llamad[oa])\b/i],['Puesto',/\b(?:puesto|cargo|rol)\b/i],['Departamento',/\b(?:departamento|[aá]rea)\b/i],['Salario',/\b(?:salario|sueldo|remuneraci[oó]n)\b/i],['Fecha de ingreso',/\b(?:fecha de ingreso|ingresa|inicio)\b/i],['Tipo de contrato',/\b(?:contrato|temporal|indefinido|honorarios)\b/i],['RFC o CURP',/\b(?:rfc|curp)\b/i]]},
+  {entity:'cliente',pattern:/\b(?:crea|crear|agrega|agregar|registra|registrar)\b[\s\S]{0,80}\bcliente\b/i,owner:'CARE',risk:'Medio',approver:'Responsable comercial',required:[['Nombre o razón social',/\b(?:nombre|raz[oó]n social)\b/i],['Contacto',/\b(?:correo|email|tel[eé]fono|contacto)\b/i],['RFC',/\brfc\b/i],['Condiciones comerciales',/\b(?:condiciones|cr[eé]dito|pago|tarifa)\b/i]]},
+  {entity:'producto',pattern:/\b(?:crea|crear|agrega|agregar|registra|registrar)\b[\s\S]{0,80}\b(?:producto|servicio)\b/i,owner:'MERIDIAN',risk:'Medio',approver:'Responsable de catálogo',required:[['Nombre',/\bnombre\b/i],['SKU o identificador',/\b(?:sku|identificador|c[oó]digo)\b/i],['Precio',/\b(?:precio|tarifa|costo)\b/i],['Inventario o disponibilidad',/\b(?:inventario|stock|disponibilidad)\b/i]]},
+  {entity:'tarea',pattern:/\b(?:crea|crear|asigna|asignar|registra|registrar)\b[\s\S]{0,80}\btarea\b/i,owner:'PMO',risk:'Bajo',approver:'Responsable operativo',required:[['Objetivo',/\b(?:objetivo|para|tarea)\b/i],['Responsable',/\b(?:responsable|asigna|departamento|[aá]rea)\b/i],['Fecha límite',/\b(?:fecha|vence|l[ií]mite|plazo|hoy|ma[ñn]ana)\b/i],['Prioridad',/\b(?:prioridad|cr[ií]tica|alta|media|baja)\b/i]]},
+  {entity:'proyecto',pattern:/\b(?:crea|crear|abre|abrir|registra|registrar)\b[\s\S]{0,80}\bproyecto\b/i,owner:'PMO',risk:'Alto',approver:'CEO o PMO autorizado',required:[['Objetivo',/\bobjetivo\b/i],['Responsable',/\b(?:responsable|owner|l[ií]der)\b/i],['Fecha objetivo',/\b(?:fecha|plazo|deadline)\b/i],['Presupuesto',/\bpresupuesto\b/i]]}
 ]
 function operationAnalysis(input){
   const spec=operationCatalog.find(item=>item.pattern.test(input))
   if(!spec)return{operation:'advisory',execution_status:'analysis',workflow:['Comprender solicitud','Consultar contexto','Coordinar áreas','Evaluar riesgos','Entregar decisión']}
   const missing=spec.required.filter(([,pattern])=>!pattern.test(input)).map(([label])=>label)
-  return{operation:'create',entity:spec.entity,owner:spec.owner,execution_status:missing.length?'requires_information':'ready_for_validation',missing_fields:missing,workflow:['Comprender solicitud','Consultar datos autorizados','Validar campos obligatorios','Evaluar impacto interdepartamental',missing.length?'Solicitar información faltante':'Preparar confirmación antes de ejecutar']}
+  return{operation:'create',entity:spec.entity,owner:spec.owner,risk:spec.risk,approver_role:spec.approver,execution_status:missing.length?'requires_information':'ready_for_validation',missing_fields:missing,workflow:['Comprender solicitud','Consultar datos autorizados','Validar campos obligatorios','Evaluar impacto interdepartamental',missing.length?'Solicitar información faltante':'Preparar confirmación antes de ejecutar']}
 }
 function sse(event,data){return `event: ${event}\ndata: ${JSON.stringify(data)}\n\n`}
 function json(res,status,body){res.statusCode=status;res.setHeader('content-type','application/json; charset=utf-8');res.setHeader('cache-control','no-store');res.setHeader('x-content-type-options','nosniff');res.end(JSON.stringify(body))}
@@ -201,6 +203,55 @@ async function guestFlow(req,res,body,profile,departmentId,input){
   try{const depth=['quick','detailed','deep'].includes(body.depth)?body.depth:'detailed';const operation=departmentId==='ceo'?operationAnalysis(input):null;let token=await startSession(req,key);let response=await upstream(req,key,profile,token,input,historyOf(body.history),'',departmentId,depth,operation);if(response.status===401||response.status===410){sessions.delete(key);token=await startSession(req,key);response=await upstream(req,key,profile,token,input,historyOf(body.history),'',departmentId,depth,operation)}return await relay(response,res,departmentId==='ceo'?{orchestration:true,depth,collaborators:orchestrationPlan(input),...operation}:null,'ephemeral-real-ai')}catch(error){console.error('[Enterprise22 Expert Proxy]',error);return json(res,503,{ok:false,error:'cloud_expert_unavailable',retryable:true})}
 }
 
+async function commandRecord(token,context,commandId){
+  const response=await rest(token,`wae_enterprise22_backbone_commands?select=id,command_type,target_agent,correlation_id,risk,status,approval_required,approver_role,summary,evidence,payload,created_at,updated_at&id=eq.${encodeURIComponent(commandId)}&tenant_id=eq.${encodeURIComponent(context.tenant.id)}&company_id=eq.${encodeURIComponent(context.company.id)}&limit=1`,{method:'GET'})
+  const rows=response.ok?await response.json().catch(()=>[]):[]
+  return Array.isArray(rows)?rows[0]||null:null
+}
+
+async function handleActions(req,res,body){
+  const token=bearer(req),subject=jwtSubject(token)
+  if(!subject)return json(res,401,{ok:false,error:'private_session_required'})
+  if(!rateOk(clientKey(req,subject)))return json(res,429,{ok:false,error:'rate_limited'})
+  try{
+    const context=await loadPrivateContext(token,clean(body.company_id,80),'ceo')
+    const action=clean(body.action,40).toLowerCase()
+    if(action==='list'){
+      const response=await rest(token,`wae_enterprise22_backbone_commands?select=id,command_type,target_agent,correlation_id,risk,status,approval_required,approver_role,summary,evidence,payload,created_at,updated_at&tenant_id=eq.${encodeURIComponent(context.tenant.id)}&company_id=eq.${encodeURIComponent(context.company.id)}&order=created_at.desc&limit=25`,{method:'GET'})
+      const commands=response.ok?await response.json().catch(()=>[]):[]
+      return json(res,response.ok?200:502,{ok:response.ok,commands:Array.isArray(commands)?commands:[]})
+    }
+    if(action==='request'){
+      const input=clean(body.input,10000),operation=operationAnalysis(input)
+      if(operation.operation!=='create')return json(res,422,{ok:false,error:'unsupported_action'})
+      if(operation.missing_fields?.length)return json(res,422,{ok:false,error:'missing_required_fields',missing_fields:operation.missing_fields})
+      const idempotencyKey=createHash('sha256').update(`${subject}|${context.company.id}|${normalize(input)}`).digest('hex')
+      const correlationId=`ceo-${Date.now()}-${idempotencyKey.slice(0,10)}`
+      const requested=await rpc(token,'wae_enterprise22_request_command',{p_tenant_id:context.tenant.id,p_company_id:context.company.id,p_idempotency_key:idempotencyKey,p_command_type:`Create.${operation.entity}`,p_source_agent:'AURORA',p_target_agent:operation.owner,p_correlation_id:correlationId,p_risk:operation.risk,p_summary:input.slice(0,500),p_approver_role:operation.approver_role,p_evidence:{source:'ceo_chat',validation:'required_fields_present',requested_at:new Date().toISOString()},p_payload:{request:input,entity:operation.entity,operation:'create'}})
+      if(!requested.ok||typeof requested.data!=='string')return json(res,502,{ok:false,error:'action_request_failed'})
+      const command=await commandRecord(token,context,requested.data)
+      return json(res,201,{ok:true,command})
+    }
+    if(action==='decide'){
+      const commandId=clean(body.command_id,80),decision=body.decision==='Approved'?'Approved':body.decision==='Rejected'?'Rejected':''
+      if(!uuid.test(commandId)||!decision)return json(res,422,{ok:false,error:'invalid_decision'})
+      const decided=await rpc(token,'wae_enterprise22_decide_command',{p_command_id:commandId,p_decision:decision,p_reason:clean(body.reason,500)||null,p_evidence:{source:'ceo_approval_center',decided_at:new Date().toISOString()}})
+      if(!decided.ok)return json(res,decided.status===403?403:422,{ok:false,error:'decision_failed'})
+      const command=await commandRecord(token,context,commandId)
+      return json(res,200,{ok:true,command})
+    }
+    if(action==='queue'){
+      const commandId=clean(body.command_id,80)
+      if(!uuid.test(commandId))return json(res,422,{ok:false,error:'invalid_command'})
+      const queued=await rpc(token,'wae_enterprise22_queue_command',{p_command_id:commandId})
+      if(!queued.ok)return json(res,422,{ok:false,error:'queue_failed'})
+      const command=await commandRecord(token,context,commandId)
+      return json(res,200,{ok:true,command})
+    }
+    return json(res,422,{ok:false,error:'unknown_action'})
+  }catch(error){console.error('[Enterprise22 Action Engine]',error);return json(res,503,{ok:false,error:'action_engine_unavailable',retryable:true})}
+}
+
 async function handle(req,res){
   const path=(req.url||'/').split('?')[0]
   if(req.method==='GET'){
@@ -209,6 +260,7 @@ async function handle(req,res){
   }
   if(req.method!=='POST')return json(res,405,{ok:false,error:'method_not_allowed'})
   let body;try{body=await readBody(req)}catch(error){return json(res,error?.message==='body_too_large'?413:400,{ok:false,error:error?.message||'invalid_request'})}
+  if(path==='/actions')return handleActions(req,res,body)
   const departmentId=clean(body.department_id,40).toLowerCase(),profile=profiles[departmentId],input=clean(body.input||body.task,10000)
   if(!profile)return json(res,422,{ok:false,error:'unknown_department'})
   if(!input)return json(res,422,{ok:false,error:'invalid_input'})
